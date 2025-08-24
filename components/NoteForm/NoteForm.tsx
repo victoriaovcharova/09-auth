@@ -1,109 +1,122 @@
-"use client"
+"use client";
 
-import css from "./NoteForm.module.css";
-import { useId } from "react";
-import type { NewNoteData } from "../../types/note";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { addNote } from "@/lib/api";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useNoteDraftStore } from '@/lib/store/noteStore';
+import css from "./NoteForm.module.css";
+import type { Tag } from "@/types/note";
+import { addNote } from "@/lib/api";
+import { useNoteDraft } from "@/lib/store/noteStore";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-export default function NoteForm() {
-  const fieldId = useId();
+const NoteForm = () => {
   const router = useRouter();
-
-  const { draft, setDraft, clearDraft } = useNoteDraftStore();
-
-  const handleChange = (
-    event: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
-  ) => {
-	 
-    setDraft({
-      ...draft,
-      [event.target.name]: event.target.value,
-    });
-  };
-
+  const { draft, setDraft, clearDraft } = useNoteDraft();
   const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const addNoteMutation = useMutation({
-    mutationFn: (newNote: NewNoteData) => {
-      return addNote(newNote);
-    },
-
+  const mutation = useMutation({
+    mutationFn: (newNote: typeof draft) => addNote(newNote),
     onSuccess: () => {
       clearDraft();
       queryClient.invalidateQueries({ queryKey: ["notes"] });
-router.push('/notes/filter/All')
-      
+      router.push("/notes/filter/All");
+    },
+    onError: () => {
+      alert("Failed to create note");
     },
   });
 
-  const handleCancel = () => router.push('/notes/filter/All');
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setDraft({ ...draft, [name]: value });
+  };
 
-  const handleSubmit = (formData: FormData) => {
-    const values = Object.fromEntries(formData) as unknown as NewNoteData;
-    // console.log(values);
-    addNoteMutation.mutate(values)
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    mutation.mutate(
+      {
+        ...draft,
+        tag: draft.tag as Tag,
+      },
+      {
+        onSettled: () => setIsSubmitting(false),
+      }
+    );
+  };
+
+  const handleCancel = () => {
+    router.back();
   };
 
   return (
+    <form onSubmit={handleSubmit} className={css.form}>
+      <div className={css.formGroup}>
+        <label htmlFor="title">Title</label>
+        <input
+          id="title"
+          name="title"
+          type="text"
+          className={css.input}
+          value={draft.title}
+          onChange={handleChange}
+          required
+          minLength={3}
+          maxLength={50}
+        />
+      </div>
 
-      <form action={handleSubmit} className={css.form}>
-        <div className={css.formGroup}>
-          <label htmlFor={`${fieldId}-title`}>Title</label>
-          <input
-            id={`${fieldId}-title`}
-            type="text"
-            name="title"
-            className={css.input}
-            defaultValue={draft?.title} onChange={handleChange}
-          />
+      <div className={css.formGroup}>
+        <label htmlFor="content">Content</label>
+        <textarea
+          id="content"
+          name="content"
+          className={css.textarea}
+          value={draft.content}
+          onChange={handleChange}
+          maxLength={500}
+        />
+      </div>
 
-        
-        </div>
+      <div className={css.formGroup}>
+        <label htmlFor="tag">Tag</label>
+        <select
+          id="tag"
+          name="tag"
+          className={css.select}
+          value={draft.tag || "Todo"}
+          onChange={handleChange}
+        >
+          <option value="Todo">Todo</option>
+          <option value="Work">Work</option>
+          <option value="Personal">Personal</option>
+          <option value="Meeting">Meeting</option>
+          <option value="Shopping">Shopping</option>
+        </select>
+      </div>
+      <div className={css.actions}>
+        <button
+          type="submit"
+          className={css.submitButton}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Creating..." : "Create note"}
+        </button>
 
-        <div className={css.formGroup}>
-          <label htmlFor={`${fieldId}-content`}>Content</label>
-          <textarea
-            
-            id={`${fieldId}-content`}
-            name="content"
-            rows={8}
-            className={css.textarea}
-            defaultValue={draft?.content} onChange={handleChange}
-          />
-         
-        </div>
-
-        <div className={css.formGroup}>
-          <label htmlFor={`${fieldId}-tag`}>Tag</label>
-          <select
-            defaultValue={draft?.tag} onChange={handleChange}
-            id={`${fieldId}-tag`}
-            name="tag"
-            className={css.select}
-          >
-            <option value="Todo">Todo</option>
-            <option value="Work">Work</option>
-            <option value="Personal">Personal</option>
-            <option value="Meeting">Meeting</option>
-            <option value="Shopping">Shopping</option>
-          </select>
-
-        </div>
-
-        <div className={css.actions}>
-          <button type="button" className={css.cancelButton} onClick={handleCancel}>
-            Cancel
-          </button>
-          <button type="submit" className={css.submitButton} disabled={false} >
-            Create note
-          </button>
-        </div>
-      </form>
-    
+        <button
+          type="button"
+          onClick={handleCancel}
+          className={css.cancelButton}
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   );
-}
+};
+
+export default NoteForm;

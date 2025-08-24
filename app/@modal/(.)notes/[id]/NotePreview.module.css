@@ -54,7 +54,7 @@
   text-overflow: ellipsis;
 }
 
-/* .backBtn {
+.backBtn {
   align-self: flex-start;
   padding: 6px 12px;
   font-size: 14px;
@@ -65,4 +65,4 @@
   text-decoration: underline;
   display: inline-block;
   background-color: transparent;
-} */
+}

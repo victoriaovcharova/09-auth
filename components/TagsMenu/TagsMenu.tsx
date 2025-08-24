@@ -1,35 +1,51 @@
+"use client";
 
-"use client"
 import Link from "next/link";
+import { useState, useRef, useEffect } from "react";
 import css from "./TagsMenu.module.css";
-import { useState } from "react";
 
-type Tag = "All" | "Work" | "Personal" | "Meeting" | "Shopping" | "Todo";
-const tags: Tag[] = ["All", "Work", "Personal", "Meeting", "Shopping", "Todo"];
-// type Props = {
-//    tags: Tag[]; 
-// };
+const tags = ["All", "Work", "Personal", "Meeting", "Shopping", "Todo"];
+
 const TagsMenu = () => {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  const [isOpen, setIsOpen] = useState(false);
-  const toggle = () => setIsOpen(!isOpen);
-
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
 
   return (
-    <div className={css.menuContainer}>
-      <button onClick={toggle} className={css.menuButton}>Notes</button>
-      {isOpen && (
-      <ul className={css.menuList}>
-        {tags.map((tag, index) => {
-          return (
-            <li key={index} className={css.menuItem}>
-              <Link href={`/notes/filter/${tag}`} className={css.menuLink} onClick={toggle}>
+    <div className={css.menuContainer} ref={menuRef}>
+      <button
+        type="button"
+        className={css.menuButton}
+        onClick={() => {
+          setOpen((prev) => !prev);
+        }}
+      >
+        Notes ▾
+      </button>
+
+      {open && (
+        <ul className={css.menuList}>
+          {tags.map((tag) => (
+            <li key={tag} className={css.menuItem}>
+              <Link
+                href={`/notes/filter/${tag}`}
+                className={css.menuLink}
+                onClick={() => setOpen(false)}
+              >
                 {tag}
               </Link>
             </li>
-          );
-        })}
-      </ul>
+          ))}
+        </ul>
       )}
     </div>
   );

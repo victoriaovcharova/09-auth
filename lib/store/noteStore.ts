@@ -2,25 +2,27 @@ import { NewNoteData } from "@/types/note";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-
-type NoteDraftStore = {
-  draft: NewNoteData;
-  setDraft: (note: NewNoteData) => void;
-  clearDraft: () => void;
-};
-
-const initialDraft = {
+const defaultDraft: NewNoteData = {
   title: "",
   content: "",
   tag: "Todo",
 };
 
-export const useNoteDraftStore = create<NoteDraftStore>()(
+type NoteDraft = {
+  draft: NewNoteData;
+  setDraft: (note: NewNoteData) => void;
+  clearDraft: () => void;
+};
+
+export const useNoteDraft = create<NoteDraft>()(
   persist(
     (set) => ({
-      draft: initialDraft,
-      setDraft: (note) => set(() => ({ draft: note })),
-      clearDraft: () => set(() => ({ draft: initialDraft })),
+      draft: defaultDraft,
+      setDraft: (note) =>
+        set(() => ({
+          draft: note,
+        })),
+      clearDraft: () => set(() => ({ draft: { ...defaultDraft } })),
     }),
     {
       name: "note-draft",

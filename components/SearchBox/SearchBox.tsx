@@ -2,7 +2,8 @@ import css from "./SearchBox.module.css";
 
 interface SearchBoxProps {
   value: string;
-  onSearch: (query: string) => void;
+  onSearch: (newSearchQuery: string) => void;
+  categoryId?: string;
 }
 
 export default function SearchBox({ value, onSearch }: SearchBoxProps) {
@@ -11,12 +12,14 @@ export default function SearchBox({ value, onSearch }: SearchBoxProps) {
   };
 
   return (
-    <input
-      className={css.input}
-      type="text"
-      placeholder="Search notes"
-      value={value}
-      onChange={handleChange}
-    />
+    <div>
+      <input
+        className={css.input}
+        value={value}
+        onChange={handleChange}
+        type="text"
+        placeholder="Search notes"
+      />
+    </div>
   );
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import css from "./Header.module.css";
 import TagsMenu from "../TagsMenu/TagsMenu";
 
-export default function Header() {
+const Header = () => {
   return (
     <header className={css.header}>
       <Link href="/" aria-label="Home">
@@ -14,10 +14,12 @@ export default function Header() {
             <Link href="/">Home</Link>
           </li>
           <li>
-            <TagsMenu/>
+            <TagsMenu />
           </li>
         </ul>
       </nav>
     </header>
   );
-}
+};
+
+export default Header;

@@ -7,18 +7,20 @@ interface PaginationProps {
   onChange: (nextPage: number) => void;
 }
 
-export default function Pagination({ page, total, onChange }: PaginationProps) {
+export default function Pagination({ total, page, onChange }: PaginationProps) {
   return (
     <ReactPaginate
       pageCount={total}
-      pageRangeDisplayed={4}
-      marginPagesDisplayed={1}
+      pageRangeDisplayed={5}
+      marginPagesDisplayed={2}
+      breakLabel="..."
       nextLabel=">"
       previousLabel="<"
       containerClassName={css.pagination}
       activeClassName={css.active}
       onPageChange={({ selected }) => onChange(selected + 1)}
       forcePage={page - 1}
+      renderOnZeroPageCount={null}
     />
   );
 }

@@ -1,52 +1,50 @@
-import css from "./NoteList.module.css";
+"use client";
+
 import type { Note } from "../../types/note";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import css from "./NoteList.module.css";
 import { deleteNote } from "@/lib/api";
 import Link from "next/link";
 
 interface NoteListProps {
   notes: Note[];
 }
+
 export default function NoteList({ notes }: NoteListProps) {
   const queryClient = useQueryClient();
 
   const deleteNoteMutation = useMutation({
-    mutationFn: (id: string) => {
-      return deleteNote(id);
-    },
-
+    mutationFn: (id: string) => deleteNote(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
     },
   });
 
+  const handleDelete = (id: string) => {
+    deleteNoteMutation.mutate(id);
+  };
+
   return (
-    <>
-      {notes.length === 0 && <span>Not found</span>}
-      {notes.length > 0 && (
-        <ul className={css.list}>
-          {notes.map((note) => {
-            return (
-              <li key={note.id} className={css.listItem}>
-                <h2 className={css.title}>{note.title}</h2>
-                <p className={css.content}>{note.content}</p>
-                <div className={css.footer}>
-                  <span className={css.tag}>{note.tag}</span>
-                  <Link className={css.link} href={`/notes/${note.id}`} scroll={false}>
-                    View details
-                  </Link>
-                  <button
-                    onClick={() => deleteNoteMutation.mutate(note.id)}
-                    className={css.button}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </>
+    <ul className={css.list}>
+      {notes.map((note) => (
+        <li key={note.id} className={css.listItem}>
+          <h2 className={css.title}>{note.title}</h2>
+          <p className={css.content}>{note.content}</p>
+          <div className={css.footer}>
+            <span className={css.tag}>{note.tag}</span>
+            <Link className={css.link} href={`/notes/${note.id}`}>
+              Preview
+            </Link>
+            <button
+              className={css.button}
+              onClick={() => handleDelete(note.id)}
+            >
+              Delete
+            </button>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
