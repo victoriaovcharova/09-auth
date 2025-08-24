@@ -1,56 +1,45 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect } from "react";
 import css from "./Modal.module.css";
 
 interface ModalProps {
+  closeModal: () => void;
   children: React.ReactNode;
-  onClose: () => void;
-  showCloseButton?: boolean;
 }
 
-export default function Modal({
-  children,
-  onClose,
-  showCloseButton = true,
-}: ModalProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-
-    document.body.style.overflow = "hidden";
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = "unset";
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [onClose]);
-
-  if (!mounted) return null;
-
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) onClose();
+export default function Modal({ closeModal, children }: ModalProps) {
+  const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) closeModal();
   };
 
-  return createPortal(
-    <div className={css.backdrop} onClick={handleBackdropClick}>
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [closeModal]);
+
+  return (
+    <div
+      className={css.backdrop}
+      role="dialog"
+      aria-modal="true"
+      onClick={handleBackdropClick}
+    >
       <div className={css.modal}>
-        {showCloseButton && (
-          <button className={css.closeButton} onClick={onClose}>
-            &times;
-          </button>
-        )}
         {children}
+        <button className={css.backBtn} type="button" onClick={closeModal}>Back</button>
       </div>
-    </div>,
-    document.body
+    </div>
   );
 }

@@ -1,106 +1,93 @@
 "use client";
-
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { createNote } from '@/lib/api/clientApi';
-import { useNoteStore } from "@/lib/store/noteStore";
-import type { NoteTag } from "@/types/note";
-import css from "./NoteForm.module.css";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import css from "./NoteForm.module.css";
+import * as Yup from "yup";
+import type { NewNote } from "@/types/note";
+import { postNote } from "@/lib/api";
+import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { useNoteDraft } from "@/lib/store/noteStore";
+import type { ChangeEvent } from "react";
 
-const tags: NoteTag[] = ["Todo", "Work", "Personal", "Meeting", "Shopping"];
+const OrderSchema = Yup.object().shape({
+  title: Yup.string()
+    .min(3, "Title must be at least 3 characters")
+    .max(50, "Too Long!")
+    .required("Title is required"),
+  content: Yup.string().max(500, "Too Long!"),
+  tag: Yup.string()
+    .oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"], "Invalid tag")
+    .required("Tag is required"),
+});
 
 export default function NoteForm() {
-  const router = useRouter();
+  const tags = ["Todo", "Work", "Personal", "Meeting", "Shopping"];
+  const { draft, setDraft, clearDraft } = useNoteDraft();
   const queryClient = useQueryClient();
-  const [error, setError] = useState<string | null>(null);
-
-  const { draft, setDraft, clearDraft } = useNoteStore();
-
-  const createMutation = useMutation({
-    mutationFn: createNote,
+  const router = useRouter();
+  const { mutate, isPending } = useMutation({
+    mutationFn: postNote,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
+      toast.success("Note added");
       clearDraft();
       router.back();
     },
-    onError: (error) => {
-      setError(
-        error instanceof Error ? error.message : "Failed to create note"
-      );
+    onError() {
+      toast.error("Failed to create note");
     },
   });
 
-  useEffect(() => {
-  }, []);
+  const handleCancel = () => router.back();
 
-  const handleInputChange = (field: keyof typeof draft, value: string) => {
-    setDraft({ [field]: value });
+  const handleSubmit = (formData: FormData) => {
+    const values = Object.fromEntries(formData) as unknown as NewNote;
+    mutate(values);
   };
 
-  const handleSubmit = async (formData: FormData) => {
-    setError(null);
-
-    const noteData = {
-      title: formData.get("title") as string,
-      content: formData.get("content") as string,
-      tag: formData.get("tag") as NoteTag,
-    };
-
-    createMutation.mutate(noteData);
-  };
-
-  const handleCancel = () => {
-    router.back();
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    setDraft({
+      ...(draft as NewNote),
+      [e.target.name as keyof NewNote]: e.target.value,
+    });
   };
 
   return (
-    <form action={handleSubmit} className={css.form}>
-      {error && <div className={css.error}>{error}</div>}
-
+    <form className={css.form} action={handleSubmit}>
       <div className={css.formGroup}>
-        <label htmlFor="title" className={css.label}>
-          Title
-        </label>
+        <label htmlFor="title">Title</label>
         <input
-          type="text"
-          id="title"
           name="title"
-          value={draft.title}
-          onChange={(e) => handleInputChange("title", e.target.value)}
+          id="title"
+          type="text"
           className={css.input}
-          required
-          disabled={createMutation.isPending}
+          onChange={handleChange}
+          defaultValue={draft.title}
         />
       </div>
 
       <div className={css.formGroup}>
-        <label htmlFor="content" className={css.label}>
-          Content
-        </label>
+        <label htmlFor="content">Content</label>
         <textarea
-          id="content"
           name="content"
-          value={draft.content}
-          onChange={(e) => handleInputChange("content", e.target.value)}
+          id="content"
+          rows={8}
           className={css.textarea}
-          rows={6}
-          required
-          disabled={createMutation.isPending}
-        />
+          onChange={handleChange}
+          defaultValue={draft.content}
+        ></textarea>
       </div>
 
       <div className={css.formGroup}>
-        <label htmlFor="tag" className={css.label}>
-          Tag
-        </label>
+        <label>Tag</label>
         <select
-          id="tag"
           name="tag"
-          value={draft.tag}
-          onChange={(e) => handleInputChange("tag", e.target.value as NoteTag)}
+          id="tag"
           className={css.select}
-          disabled={createMutation.isPending}
+          onChange={handleChange}
+          defaultValue={draft.tag}
         >
           {tags.map((tag) => (
             <option key={tag} value={tag}>
@@ -109,22 +96,16 @@ export default function NoteForm() {
           ))}
         </select>
       </div>
-
       <div className={css.actions}>
-        <button
-          type="button"
-          onClick={handleCancel}
-          className={css.cancelButton}
-          disabled={createMutation.isPending}
-        >
-          Cancel
+        <button type="submit" className={css.submitButton} disabled={isPending}>
+          {isPending ? "Creating" : "Create"}
         </button>
         <button
-          type="submit"
-          className={css.submitButton}
-          disabled={createMutation.isPending}
+          type="button"
+          className={css.cancelButton}
+          onClick={handleCancel}
         >
-          {createMutation.isPending ? "Creating..." : "Create Note"}
+          Cancel
         </button>
       </div>
     </form>
