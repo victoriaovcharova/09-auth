@@ -1,66 +1,52 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono, Roboto } from "next/font/google";
-import "./globals.css";
-import Header from "@/components/Header/Header";
-import Footer from "@/components/Footer/Footer";
-import TanStackProvider from "@/components/TanStackProvider/TanStackProvider";
+import type { Metadata } from 'next';
+import { Roboto } from 'next/font/google';
+import TanStackProvider from '@/components/TanStackProvider/TanStackProvider';
+import Header from '@/components/Header/Header';
+import Footer from '@/components/Footer/Footer';
+import "./global.css"
+import AuthProvider from '@/components/AuthProvider/AuthProvider';
 
+export const metadata: Metadata = {
+  title: "NoteHub – Manage Your Notes Easily",
+  description: "NoteHub is a modern note-taking app with search, filtering, and more.",
+  openGraph: {
+    title: "NoteHub – Manage Your Notes Easily",
+    description: "NoteHub is a modern note-taking app with search, filtering, and more.",
+    url: "https://08-zustand-xi-dun.vercel.app/", // what sould be here?
+    images: [
+      {
+        url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
+        width: 1200,
+        height: 630,
+        alt: "NoteHub preview image",
+      },
+    ],
+  },
+};
 
-const RobotoFont = Roboto({
-  weight: ["400", "500", "700"],
-  variable: "--font-roboto",
-  subsets: ["latin"],
-  display: "swap",
+const roboto = Roboto({
+  weight: ["400", "700"],
+  subsets: ["latin"],    
+  variable: "--font-roboto", 
+  display: "swap",       
 });
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata:Metadata = {
-  title: "NoteHub: main page",
-  description: "NoteHub is a simple and efficient application designed for managing personal notes. It helps keep your thoughts organized and accessible in one place, whether you are at home or on the go.",
-      openGraph: {
-      title: `NoteHub: main page`,
-      description: `NoteHub is a simple and efficient application designed for managing personal notes. It helps keep your thoughts organized and accessible in one place, whether you are at home or on the go.`,
-      url: `https://08-zustand-eta-five.vercel.app/`,
-      siteName: 'NoteHub',
-      images: [
-        {
-          url: 'https://ac.goit.global/fullstack/react/notehub-og-meta.jpg',
-          width: 1200,
-          height: 630,
-          alt: `NoteHub`,
-        },
-      ],
-      type: 'website',
-    },
-}
-
-
-export default function RootLayout({
-  children,
-  modal,
-}: Readonly<{
+type RootLayoutProps = {
   children: React.ReactNode;
   modal: React.ReactNode;
-}>) {
+};
+
+export default function RootLayout({
+  children, modal }: RootLayoutProps) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} ${RobotoFont.variable}`}>
+      <body className={`${roboto.variable}`}>
         <TanStackProvider>
-        <Header/>
-        <main>
-          {children}
-          {modal}
-        </main>
-        <Footer/>
+          <AuthProvider>
+            <Header />
+            <main>{children}{modal}</main>
+            <Footer />
+          </AuthProvider>
         </TanStackProvider>
       </body>
     </html>

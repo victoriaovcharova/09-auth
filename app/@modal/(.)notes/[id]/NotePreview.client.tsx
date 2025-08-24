@@ -1,45 +1,41 @@
-"use client";
+'use client';
 
-import { useParams, useRouter} from "next/navigation";
-import css from "./NotePreview.client.module.css"
-import { useQuery } from "@tanstack/react-query";
-import { fetchNoteById } from "@/lib/api";
-import Loader from "@/components/Loader/Loader";
-import ErrorMessage from "@/components/ErrorMessage/ErrorMessage";
-import Modal from "@/components/Modal/Modal";
+import Modal from '@/components/Modal/Modal';
+import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { fetchNoteById } from '@/lib/api/clientApi';
+import css from "@/components/NoteDetails.client/NoteDetails.module.css"
 
-const NoteDetailsClient = () => {
+interface NotePreviewProps {
+  id: string;
+}
 
-    const {id} = useParams<{id: string}>()
-    const router = useRouter();
-    const {data:note, isLoading, error} = useQuery({
-        queryKey: ['note', id],
-        queryFn: ()=> fetchNoteById(id),
-        refetchOnMount: false,
-    })
-    
-const close = () => router.back();
-    if (isLoading) {
-      return <Loader/>
-    }
+export default function NotePreview({ id }: NotePreviewProps) {
+  const router = useRouter();
 
-    if (error || !note) {
-      return <ErrorMessage/>
-    }
+  const { data:     note, isLoading, error } = useQuery({
+    queryKey: ['note', id],
+    queryFn: () => fetchNoteById(id),
+    refetchOnMount: false,
+  });
 
   return (
-    <Modal closeModal={close}>
-    <div className={css.container}>
-      <div className={css.item}>
-        <div className={css.header}>
-          <h2>{note?.title}</h2>
+    <Modal onClose={() => router.back()}>
+      {isLoading && <p>Loading note...</p>}
+      {error && <p>Failed to load note.</p>}
+      {!note && <p>Failed to load note.</p>}
+      {note && (
+        <div className={css.container}>
+            <div className={css.item}>
+              <div className={css.header}>
+                <h2>{note.title}</h2>
+              </div>
+              <p className={css.content}>{note.content}</p>
+              <p className={css.date}>{note.createdAt}</p>
+            </div>
         </div>
-        <p className={css.content}>{note?.content}</p>
-        <p className={css.date}>{note?.createdAt}</p>
-      </div>
-    </div>
+      )}
     </Modal>
   );
-};
 
-export default NoteDetailsClient
+}
