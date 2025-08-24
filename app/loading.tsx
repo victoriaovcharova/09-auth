@@ -1,3 +1,5 @@
-export default function NotesLoading() {
-  return <p>Loading your page...</p>;
-}
+const Loading = () => {
+  return <p>Loading, please wait...</p>;
+};
+
+export default Loading;

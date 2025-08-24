@@ -1,16 +1,16 @@
-'use client';
-
-import styles from './Footer.module.css';
+import Link from "next/link";
+import css from "./Footer.module.css";
 
 export default function Footer() {
   return (
-    <footer className={styles.footer}>
-      <div className={styles.content}>
+    <footer className={css.footer}>
+      <div className={css.content}>
         <p>© {new Date().getFullYear()} NoteHub. All rights reserved.</p>
-        <div className={styles.wrap}>
+        <div className={css.wrap}>
           <p>Developer: your name</p>
           <p>
-            Contact us: <a href="mailto:student@notehub.app">student@notehub.app</a>
+            Contact us:
+            <Link href="mailto:student@notehub.app">student@notehub.app</Link>
           </p>
         </div>
       </div>
