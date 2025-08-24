@@ -1,146 +1,105 @@
 "use client";
-
-import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import * as Yup from "yup";
-import { createNote } from "@/lib/api/clientApi";
 import css from "./NoteForm.module.css";
-import { CreateNoteDto } from "@/types/CreateNoteDto";
-import { useNoteStore } from "@/lib/store/noteStore";
+import * as Yup from "yup";
+import type { NewNote } from "@/types/note";
+import { postNote } from "@/lib/api";
+import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useNoteDraft } from "@/lib/store/noteStore";
+import type { ChangeEvent } from "react";
 
-const TAG_OPTIONS = ["Work", "Personal", "Meeting", "Shopping", "Todo"];
-
-const validationSchema = Yup.object({
+const OrderSchema = Yup.object().shape({
   title: Yup.string()
     .min(3, "Title must be at least 3 characters")
-    .max(50, "Title must be at most 50 characters")
+    .max(50, "Too Long!")
     .required("Title is required"),
-  content: Yup.string()
-    .max(500, "Content must be at most 500 characters")
-    .notRequired(),
+  content: Yup.string().max(500, "Too Long!"),
   tag: Yup.string()
-    .oneOf(TAG_OPTIONS, "Invalid tag")
+    .oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"], "Invalid tag")
     .required("Tag is required"),
 });
 
 export default function NoteForm() {
-  const router = useRouter();
+  const tags = ["Todo", "Work", "Personal", "Meeting", "Shopping"];
+  const { draft, setDraft, clearDraft } = useNoteDraft();
   const queryClient = useQueryClient();
-
-  const draft = useNoteStore((state) => state.draft);
-  const setDraft = useNoteStore((state) => state.setDraft);
-  const clearDraft = useNoteStore((state) => state.clearDraft);
-
-  const [formData, setFormData] = useState<CreateNoteDto>(draft);
-  const [errors, setErrors] = useState<Partial<CreateNoteDto>>({});
-
-  useEffect(() => {
-    setFormData(draft);
-  }, [draft]);
-
-
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setDraft({ [name]: value });
-  }
-
-  const mutation = useMutation({
-    mutationFn: createNote,
+  const router = useRouter();
+  const { mutate, isPending } = useMutation({
+    mutationFn: postNote,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
+      toast.success("Note added");
       clearDraft();
-      router.back(); 
+      router.back();
+    },
+    onError() {
+      toast.error("Failed to create note");
     },
   });
 
-  async function handleSubmit(form: FormData) {
-    const values: CreateNoteDto = {
-      title: form.get("title") as string,
-      content: (form.get("content") as string) || "",
-      tag: form.get("tag") as string,
-    };
+  const handleCancel = () => router.back();
 
-    try {
-      await validationSchema.validate(values, { abortEarly: false });
-      setErrors({});
-      mutation.mutate(values);
-    } catch (err) {
-      if (err instanceof Yup.ValidationError) {
-        const newErrors: Partial<CreateNoteDto> = {};
-        err.inner.forEach((e) => {
-          if (e.path) {
-            newErrors[e.path as keyof CreateNoteDto] = e.message;
-          }
-        });
-        setErrors(newErrors);
-      }
-    }
-  }
+  const handleSubmit = (formData: FormData) => {
+    const values = Object.fromEntries(formData) as unknown as NewNote;
+    mutate(values);
+  };
 
-
-  function handleCancel() {
-    router.back();
-  }
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    setDraft({
+      ...(draft as NewNote),
+      [e.target.name as keyof NewNote]: e.target.value,
+    });
+  };
 
   return (
     <form className={css.form} action={handleSubmit}>
       <div className={css.formGroup}>
         <label htmlFor="title">Title</label>
         <input
-          id="title"
           name="title"
+          id="title"
           type="text"
-          value={formData.title}
-          onChange={handleChange}
           className={css.input}
+          onChange={handleChange}
+          defaultValue={draft.title}
         />
-        {errors.title && <div className={css.error}>{errors.title}</div>}
       </div>
 
       <div className={css.formGroup}>
         <label htmlFor="content">Content</label>
         <textarea
-          id="content"
           name="content"
-          rows={5}
-          value={formData.content}
-          onChange={handleChange}
+          id="content"
+          rows={8}
           className={css.textarea}
-        />
-        {errors.content && <div className={css.error}>{errors.content}</div>}
+          onChange={handleChange}
+          defaultValue={draft.content}
+        ></textarea>
       </div>
 
       <div className={css.formGroup}>
-        <label htmlFor="tag">Tag</label>
+        <label>Tag</label>
         <select
-          id="tag"
           name="tag"
-          value={formData.tag}
-          onChange={handleChange}
+          id="tag"
           className={css.select}
+          onChange={handleChange}
+          defaultValue={draft.tag}
         >
-          {TAG_OPTIONS.map((option) => (
-            <option key={option} value={option}>
-              {option}
+          {tags.map((tag) => (
+            <option key={tag} value={tag}>
+              {tag}
             </option>
           ))}
         </select>
-        {errors.tag && <div className={css.error}>{errors.tag}</div>}
       </div>
-
       <div className={css.actions}>
-        <button
-          type="submit"
-          className={css.submitButton}
-          disabled={mutation.isPending}
-        >
-          {mutation.isPending ? "Creating..." : "Create Note"}
+        <button type="submit" className={css.submitButton} disabled={isPending}>
+          {isPending ? "Creating" : "Create"}
         </button>
-
         <button
           type="button"
           className={css.cancelButton}

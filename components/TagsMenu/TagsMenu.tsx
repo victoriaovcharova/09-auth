@@ -1,51 +1,46 @@
-import React, { useState, useRef, useEffect } from 'react';
-import css from './TagsMenu.module.css'; // use your given CSS
-import Link from 'next/link';
+'use client'
+import { useState } from "react";
+import css from "./TagsMenu.module.css";
+import Link from "next/link";
 
-const tags = ['All', 'Work', 'Personal', 'Meeting', 'Shopping', 'Todo'];
-
-export default function TagsMenu() {
+const TagsMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close menu on outside click
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+
+  const tags = [
+    "All",
+    "Todo",
+    "Work",
+    "Personal",
+    "Meeting",
+    "Shopping",
+  ];
+  const openTags= () => {
+    setIsOpen(!isOpen)
+  }
+
+  const handleClickLink = () =>{
+    setIsOpen(false)
+  }
 
   return (
-    <div className={css.menuContainer} ref={menuRef}>
-      <button
-        className={css.menuButton}
-        onClick={() => setIsOpen((prev) => !prev)}
-      >
-        Notes
+    <div className={css.menuContainer}>
+      <button className={css.menuButton} onClick={openTags}>
+        {isOpen ? "Notes ▴" : "Notes ▾"}
       </button>
-
-      {isOpen && (
-        <ul className={css.menuList}>
+        {isOpen && (
+            <ul className={css.menuList}>
         {tags.map((tag) => (
-          <li key={tag} className={css.menuItem} onClick={() => setIsOpen(false)}>
+          <li className={css.menuItem} key={tag}>
             <Link
-              href={
-                tag === 'All'
-                  ? '/notes/filter/All'
-                  : `/notes/filter/${encodeURIComponent(tag)}`
-              }
+              href={`/notes/filter/${tag}`}
               className={css.menuLink}
-            >
-              {tag}
-            </Link>
-          </li>
-        ))}
-      </ul>
-      )}
+              onClick={handleClickLink}
+            >{tag}</Link>
+          </li>))}
+              </ul>)}
     </div>
   );
-}
+};
+
+export default TagsMenu;
