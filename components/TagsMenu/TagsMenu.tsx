@@ -1,46 +1,38 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { useState, useRef, useEffect } from "react";
-import css from "./TagsMenu.module.css";
+import css from "@/components/TagsMenu/TagsMenu.module.css";
 
-const tags = ["All", "Work", "Personal", "Meeting", "Shopping", "Todo"];
+type Props = {
+  tags: string[];
+};
 
-const TagsMenu = () => {
-  const [open, setOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, []);
+export default function TagsMenu({ tags }: Props) {
+  const [isOpen, setIsOpen] = useState(false);
+  const toggle = () => setIsOpen(!isOpen);
+  
 
   return (
-    <div className={css.menuContainer} ref={menuRef}>
-      <button
-        type="button"
-        className={css.menuButton}
-        onClick={() => {
-          setOpen((prev) => !prev);
-        }}
-      >
+    <div className={css.menuContainer}>
+      <button onClick={toggle} className={css.menuButton}>
         Notes ▾
       </button>
-
-      {open && (
+      {isOpen && (
         <ul className={css.menuList}>
+          {/* список тегів */}
+          <li className={css.menuItem}>
+            <Link
+              href={`/notes/filter/All`}
+              onClick={toggle}
+              className={css.menuLink}
+            >
+              All
+            </Link>
+          </li>
           {tags.map((tag) => (
             <li key={tag} className={css.menuItem}>
-              <Link
-                href={`/notes/filter/${tag}`}
-                className={css.menuLink}
-                onClick={() => setOpen(false)}
-              >
+              <Link href={`/notes/filter/${tag}`} onClick={toggle}>
                 {tag}
               </Link>
             </li>
@@ -49,6 +41,4 @@ const TagsMenu = () => {
       )}
     </div>
   );
-};
-
-export default TagsMenu;
+}

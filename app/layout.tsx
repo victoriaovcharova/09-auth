@@ -1,64 +1,55 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Roboto } from "next/font/google";
-import "./globals.css";
+import { Roboto } from 'next/font/google';
 import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
+import { Toaster } from "react-hot-toast";
 import TanStackProvider from "@/components/TanStackProvider/TanStackProvider";
+import AuthProvider from '@/components/AuthProvider/AuthProvider';
+import "./globals.css";
 
-const robotoFont = Roboto({
-  variable: "--font-roboto",
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  display: "swap",
-});
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const robotoSans = Roboto({
+  subsets: ['latin'], 
+  weight: ['400', '700'],
+  variable: '--font-roboto', 
+  display: 'swap', 
 });
 
 export const metadata: Metadata = {
-  title: "NoteHub",
-  description:
-    "A simple and easy-to-use note-taking app. Create, edit, and delete your notes effortlessly.",
+  title: "NoteHub App",
+  description: "NoteHub is a modern web app to take, organize, and manage your notes with ease.",
   openGraph: {
-    title: "NoteHub",
-    description: "Take notes. Edit fast. Stay organized.",
-    url: "http://localhost:3000/",
-    images: [
-      {
-        url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
-        width: 1200,
-        height: 630,
-        alt: "NoteHub",
-      },
-    ],
-  },
-};
+      title: "NoteHub App",
+      description: "NoteHub is a modern web app to take, organize, and manage your notes with ease.",
+      url: "https://notehub.com",
+      siteName: "NoteHub",
+      images: [
+        {
+          url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
+}
 
 export default function RootLayout({
   children,
-  modal,
+  modal
 }: Readonly<{
-  children: React.ReactNode;
-  modal: React.ReactNode;
+  children: React.ReactNode,
+  modal: React.ReactNode,
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${robotoFont.variable}`}
-      >
+      <body className={`${robotoSans.variable}`}>
         <TanStackProvider>
-          <Header />
-          <main>
-            {children} {modal}
-          </main>
-          <Footer />
+          <AuthProvider>
+            <Header />
+            {children}
+            {modal}
+            <Toaster position="top-right" />
+            <Footer />
+          </AuthProvider>
         </TanStackProvider>
       </body>
     </html>

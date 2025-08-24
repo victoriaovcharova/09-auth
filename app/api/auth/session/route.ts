@@ -8,6 +8,7 @@ import { logErrorResponse } from "../../_utils/utils";
 export async function GET() {
   try {
     const cookieStore = await cookies();
+
     const accessToken = cookieStore.get("accessToken")?.value;
     const refreshToken = cookieStore.get("refreshToken")?.value;
 
@@ -53,3 +54,4 @@ export async function GET() {
     return NextResponse.json({ success: false }, { status: 200 });
   }
 }
+

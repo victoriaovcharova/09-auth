@@ -1,5 +1,2 @@
-const NotePreview = () => {
-  return null;
-};
-
-export default NotePreview;
+const Default = () => null;
+export default Default;
