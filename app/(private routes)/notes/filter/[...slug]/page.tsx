@@ -1,21 +1,17 @@
-// SSR компонент
+import { fetchNotes } from '@/lib/api/serverApi';
+import NotesClient from './Notes.client';
+import { FetchNotesResponse } from '@/types/FetchNotesResponse';
 import type { Metadata } from "next";
-// import { fetchNotes } from "@/lib/api/clientApi";
-import NotesClient from "./Notes.client";
-import { fetchNotes } from "@/lib/api/serverApi";
 
 type Props = {
-  params: Promise<{ slug?: string[] }>;
+  params: Promise<{ slug: string[] }>;
 };
 
-// metadata
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const slug = (await params).slug || [];
-  const tag =
-    slug.length > 0 && slug[0].toLowerCase() !== "all" ? slug[0] : "All";
-
-  const pageTitle = `Notes – ${tag}`;
-  const pageDescription = `Filtered notes by tag: ${tag}`;
+  const { slug } = await params; 
+  const filterName = slug.join(" / ");
+  const pageTitle = `Notes filtered by: ${filterName} – NoteHub`;
+  const pageDescription = `Viewing notes filtered by: ${filterName}.`;
 
   return {
     title: pageTitle,
@@ -23,36 +19,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: pageTitle,
       description: pageDescription,
-      url: `https://notehub.com/notes/filter/${tag.toLowerCase()}`,
+      url: `https://08-zustand-xi-dun.vercel.app/notes/filter/${slug.join("/")}`,
       images: [
         {
-          url: `https://ac.goit.global/fullstack/react/notehub-og-meta.jpg`,
+          url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
           width: 1200,
           height: 630,
-          alt: "Notes preview",
+          alt: "NoteHub preview image",
         },
       ],
     },
   };
 }
 
-export default async function NotesSlugPage({ params }: Props) {
-  const slug = (await params).slug || []; // check (await params)
-  let tag: string | undefined = undefined;
 
-  if (slug.length > 0 && slug[0].toLowerCase() !== "all") {
-    tag = slug[0];
-  }
+export default async function NotesPage({ params }: Props) {
+  const { slug } = await params; 
 
-  try {
-    const data = await fetchNotes("", 1, tag);
+  const tag = slug[0] === 'All' ? undefined : slug[0];
 
-    return <NotesClient initialData={data} tag={tag} />;
-  } catch (error) {
-    return (
-      <div>
-        <p>Something went wrong while fetching the notes.</p>
-      </div>
-    );
-  }
+  const initialData: FetchNotesResponse = await fetchNotes({
+    page: 1,
+    search: "",
+    tag: tag,
+    perPage: 12,
+  }, );
+
+  return <NotesClient initialData={initialData} searchTag={tag} />;
 }

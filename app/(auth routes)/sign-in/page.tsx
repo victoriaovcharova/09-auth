@@ -2,42 +2,40 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LoginRequestData } from "@/types/note";
-import { signIn } from "@/lib/api/clientApi";
-import { ApiError } from "@/app/api/api";
-import css from "./SignInPage.module.css";
 import { useAuthStore } from "@/lib/store/authStore";
+import { loginUser } from "@/lib/api/clientApi"; 
+import css from "./page.module.css";
 
-export default function SignIn() {
-  const router = useRouter();
+export default function SignInPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const { setUser, setLoading, loading } = useAuthStore(); 
+  const router = useRouter();
 
- // Отримуємо метод із стора
- const setUser = useAuthStore((state) => state.setUser);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  const handlerSignIn = async (formData: FormData) => {
     try {
-      const formValues = Object.fromEntries(formData) as LoginRequestData;
-      const result = await signIn(formValues);
-      if (result) {
-       // Записуємо користувача у глобальний стан
-	      setUser(result);
+      const userData = await loginUser({email, password});
+      if (userData) {
+        setUser(userData);
         router.push("/profile");
       } else {
         setError("Invalid email or password");
       }
-    } catch (error) {
-      setError(
-        (error as ApiError).response?.data?.error ??
-          (error as ApiError).message ??
-          "Oops... some error"
-      );
+    } catch (err) {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <main className={css.mainContent}>
-      <form action={handlerSignIn} className={css.form}>
+      <form className={css.form} onSubmit={handleSubmit}>
         <h1 className={css.formTitle}>Sign in</h1>
 
         <div className={css.formGroup}>
@@ -47,6 +45,8 @@ export default function SignIn() {
             type="email"
             name="email"
             className={css.input}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
@@ -58,16 +58,23 @@ export default function SignIn() {
             type="password"
             name="password"
             className={css.input}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
           />
         </div>
 
         <div className={css.actions}>
-          <button type="submit" className={css.submitButton}>
-            Log in
+          <button
+            type="submit"
+            className={css.submitButton}
+            disabled={loading}
+          >
+            {loading ? "Signing in..." : "Log in"}
           </button>
         </div>
-        { error && <p className={css.error}>{error}</p> }
+
+        {error && <p className={css.error}>{error}</p>}
       </form>
     </main>
   );

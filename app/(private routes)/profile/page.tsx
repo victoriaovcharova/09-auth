@@ -1,31 +1,30 @@
+import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import Image from 'next/image';
-import { Metadata } from 'next';
-import {usersServerMe} from '@/lib/api/serverApi';
 import css from "./ProfilePage.module.css";
+import { getUserServer } from "@/lib/api/serverApi";
 
 export const metadata: Metadata = {
-  title: 'Profile Page',
-  description: 'User profile page with account details and settings.',
-
+  title: "User Profile | NoteHub",
+  description: "Profile page for the logged in user",
+  robots: { index: false, follow: false },
   openGraph: {
-      title: 'Profile Page',
-      description: "User profile page with account details and settings.",
-      url: "http://localhost:3000/profile",
-      siteName: "NoteHub",
-      images: [
-        {
-          url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
-          width: 1200,
-          height: 630,
-        },
-      ],
-    },
+    title: "User Profile",
+    description: "Manage your account details on NoteHub",
+    type: "profile",
+  },
 };
 
-export default async function Profile() {
+export default async function ProfilePage() {
+  const user = await getUserServer();
 
-  const user =  await usersServerMe();
+  if (!user) {
+    return (
+      <main className={css.mainContent}>
+        <p>Failed to load profile</p>
+      </main>
+    );
+  }
 
   return (
     <main className={css.mainContent}>
@@ -33,18 +32,20 @@ export default async function Profile() {
         <div className={css.header}>
           <h1 className={css.formTitle}>Profile Page</h1>
           <Link href="/profile/edit" className={css.editProfileButton}>
-            Edit Profile
+            Edit
           </Link>
         </div>
+
         <div className={css.avatarWrapper}>
           <Image
-            src="/profile-photo.png"
+            src={user.avatar || "/avatar.png"}
             alt="User Avatar"
             width={120}
             height={120}
             className={css.avatar}
           />
         </div>
+
         <div className={css.profileInfo}>
           <p>Username: {user.username}</p>
           <p>Email: {user.email}</p>

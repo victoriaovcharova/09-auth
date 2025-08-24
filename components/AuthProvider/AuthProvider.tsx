@@ -1,37 +1,94 @@
 "use client";
 
-import { checkSession, usersMe } from "@/lib/api/clientApi";
+import { ReactNode, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store/authStore";
-import { useEffect } from "react";
+import { getAuthSession, getCurrentUser } from "@/lib/api/clientApi";
 
-type Props = {
-  children: React.ReactNode;
-};
+const privateRoutes = ["/profile", "/notes", "/dashboard"];
 
-const AuthProvider = ({ children }: Props) => {
-  const setUser = useAuthStore((state) => state.setUser);
-  const clearIsAuthenticated = useAuthStore(
-    (state) => state.clearIsAuthenticated
+export default function AuthProvider({ children }: { children: ReactNode }) {
+  const {
+    user,
+    isAuthenticated,
+    setUser,
+    clearIsAuthenticated,
+    loading,
+    setLoading,
+  } = useAuthStore();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const isPrivateRoute = privateRoutes.some((route) =>
+    pathname.startsWith(route)
   );
 
-  //const pathname = usePathname();
   useEffect(() => {
-    const fetchUser = async () => {
-      // Перевіряємо сесію
-      const isAuthenticated = await checkSession();
-      if (isAuthenticated) {
-        // Якщо сесія валідна — отримуємо користувача
-        const user = await usersMe();
-        if (user) setUser(user);
-      } else {
-        // Якщо сесія невалідна — чистимо стан
+    const initAuth = async () => {
+      setLoading(true);
+
+      try {
+        const session = await getAuthSession();
+
+        if (session?.success) {
+          const userData = await getCurrentUser();
+          if (userData) {
+            setUser(userData);
+            return;
+          }
+        }
+
         clearIsAuthenticated();
+        if (isPrivateRoute) {
+          router.push("/sign-in");
+        }
+      } catch (error) {
+        clearIsAuthenticated();
+        if (isPrivateRoute) {
+          router.push("/sign-in");
+        }
+      } finally {
+        setLoading(false);
       }
     };
-    fetchUser();
-  }, [setUser, clearIsAuthenticated]);
 
-  return children;
-};
+    initAuth();
+  }, [
+    pathname,
+    setUser,
+    clearIsAuthenticated,
+    setLoading,
+    isPrivateRoute,
+    router,
+  ]);
 
-export default AuthProvider;
+  useEffect(() => {
+    if (!loading && isPrivateRoute && !isAuthenticated) {
+      clearIsAuthenticated();
+      router.push("/sign-in");
+      return;
+    }
+  }, [isAuthenticated, isPrivateRoute, loading, clearIsAuthenticated, router]);
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          fontSize: "18px",
+        }}
+      >
+        Loading...
+      </div>
+    );
+  }
+
+  if (isPrivateRoute && !isAuthenticated) {
+    return null;
+  }
+
+  return <>{children}</>;
+}

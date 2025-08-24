@@ -2,45 +2,38 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { RegisterRequestData } from "@/types/note";
-import { ApiError } from "@/app/api/api";
-import { signUp } from "@/lib/api/clientApi";
+import { registerUser } from "@/lib/api/clientApi";
 import { useAuthStore } from "@/lib/store/authStore";
-import css from "./SignUpPage.module.css";
+import css from "./page.module.css";
 
-export default function SignUp() {
+export default function SignUpPage() {
   const router = useRouter();
-  const [error, setError] = useState("");
+  const { setUser } = useAuthStore();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // Отримуємо метод із стора
-  const setUser = useAuthStore((state) => state.setUser);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
 
-  const handlerSignUp = async (formData: FormData) => {
     try {
-      const formValues = Object.fromEntries(formData) as RegisterRequestData;
-      const result = await signUp(formValues);
-
-
-      if (result) {
-        // Записуємо користувача у глобальний стан
-        setUser(result);
-        router.push("/profile");
-      } else {
-        setError("Invalid email or password");
-      }
-    } catch (error) {
-      setError(
-        (error as ApiError).response?.data?.error ??
-          (error as ApiError).message ??
-          "Oops... some error"
-      );
+      const userData = await registerUser({email, password});
+      setUser(userData);
+      router.push("/profile"); 
+    } catch {
+        setError("Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <main className={css.mainContent}>
       <h1 className={css.formTitle}>Sign up</h1>
-      <form action={handlerSignUp} className={css.form}>
+      <form className={css.form} onSubmit={handleSubmit}>
         <div className={css.formGroup}>
           <label htmlFor="email">Email</label>
           <input
@@ -48,6 +41,8 @@ export default function SignUp() {
             type="email"
             name="email"
             className={css.input}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
@@ -59,15 +54,22 @@ export default function SignUp() {
             type="password"
             name="password"
             className={css.input}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
           />
         </div>
 
         <div className={css.actions}>
-          <button type="submit" className={css.submitButton}>
-            Register
+          <button
+            type="submit"
+            className={css.submitButton}
+            disabled={loading}
+          >
+            {loading ? "Registering..." : "Register"}
           </button>
         </div>
+
         {error && <p className={css.error}>{error}</p>}
       </form>
     </main>

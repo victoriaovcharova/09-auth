@@ -1,9 +1,10 @@
 .list {
+  width: 90%;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
   padding: 0;
-  margin: 0;
+  margin: 0 auto;
   list-style: none;
 }
 
@@ -38,7 +39,7 @@
   overflow: hidden;
 }
 
-.button {
+.deleteButton {
   align-self: flex-end;
   padding: 6px 12px;
   font-size: 14px;
@@ -50,7 +51,7 @@
   transition: background-color 0.2s ease;
 }
 
-.button:hover {
+.deleteButton:hover {
   background-color: #bb2d3b;
 }
 
@@ -73,23 +74,20 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-decoration: none;
 }
 
-.link {
-  align-self: flex-end;
-  padding: 6px 12px;
-  font-size: 14px;
-  color: #fff;
-  background-color: #0d6efd; /* синій колір */
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  text-decoration: none;
+.linkButton {
   display: inline-block;
-  transition: background-color 0.2s ease;
-}
-
-.link:hover {
-  background-color: #0b5ed7;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #0042a5;
+  background-color: #a9cdff;
+  border: 1px solid hsl(215, 100%, 70%);
+  border-radius: 12px;
+  max-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-decoration: none;
+  font-weight: 700;
 }

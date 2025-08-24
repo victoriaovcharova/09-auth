@@ -9,7 +9,6 @@ type Props = {
 };
 
 export async function GET(request: Request, { params }: Props) {
-
   try {
     const cookieStore = await cookies();
     const { id } = await params;
