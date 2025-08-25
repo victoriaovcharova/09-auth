@@ -1,38 +1,27 @@
-"use client";
-import { useState } from "react";
-import Link from "next/link";
-import css from "./TagsMenu.module.css";
+'use client';
+import css from './TagsMenu.module.css';
+import { useState } from 'react';
+import Link from 'next/link';
 
-const TagsMenu = () => {
-  const tags = [
-    "All",
-    "Todo",
-    "Work",
-    "Personal",
-    "Shopping",
-    "Meeting",
-    "Ideas",
-    "Travel",
-    "Finance",
-    "Health",
-    "Important",
-  ];
+
+type Props = {
+  tags: string[];
+};
+
+function TagsMenu({ tags }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const toggle = () => setIsOpen(!isOpen);
+
   return (
     <div className={css.menuContainer}>
-      <button onClick={toggle} className={css.menuButton}>
+      <button className={css.menuButton} onClick={toggle}>
         Notes ▾
       </button>
       {isOpen && (
-        <ul className={css.menu}>
+        <ul className={css.menuList}>
           {tags.map((tag) => (
             <li key={tag} className={css.menuItem}>
-              <Link
-                href={`/notes/filter/${tag}`}
-                className={css.menuLink}
-                onClick={toggle}
-              >
+              <Link href={`/notes/filter/${tag}`} className={css.menuLink} onClick={toggle}>
                 {tag}
               </Link>
             </li>
@@ -41,6 +30,6 @@ const TagsMenu = () => {
       )}
     </div>
   );
-};
+}
 
 export default TagsMenu;

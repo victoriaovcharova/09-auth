@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 type Props = {
   children: React.ReactNode;
 };
 
-const AuthLayout = ({ children }: Props) => {
+export default function PublicLayout({ children }: Props) {
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
@@ -18,6 +18,4 @@ const AuthLayout = ({ children }: Props) => {
   }, [router]);
 
   return <>{loading ? <div>Loading...</div> : children}</>;
-};
-
-export default AuthLayout;
+}

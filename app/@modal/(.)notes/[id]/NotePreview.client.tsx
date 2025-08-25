@@ -1,48 +1,43 @@
-"use client";
-import { useQuery } from "@tanstack/react-query";
-import { useParams, useRouter } from "next/navigation";
-import { fetchNoteById } from "@/lib/api/clientApi";
-import css from "./NotePreview.module.css";
-import Modal from "@/components/Modal/Modal";
-import Loader from "@/components/Loader/Loader";
-import ErrorMessage from "@/components/ErrorMessage/ErrorMessage";
+'use client';
+import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
+import Modal from '@/components/Modal/Modal';
+import { fetchNoteById } from '@/lib/api/clientApi';
+import css from './NotePreview.module.css';
+import { useRouter } from 'next/navigation';
+import { Note } from '@/types/note';
 
 const NotePreview = () => {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const {
-    data: note,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["note", id],
+
+  const { data, isError, isLoading } = useQuery<Note>({
+    queryKey: ['note', id],
     queryFn: () => fetchNoteById(id),
     refetchOnMount: false,
   });
 
-  if (isLoading) return <Loader />;
-  if (error || !note) return <ErrorMessage />;
+  if (isLoading) {
+    return null;
+  }
 
-  const handleClose = () => {
-    router.back();
-  };
+  if (isError || !data) return <p>Something went wrong.</p>;
 
   return (
-    <Modal onClose={handleClose}>
-      <div className={css.container}>
-        <div className={css.item}>
-          <div className={css.header}>
-            <h2>{note.title}</h2>
+    <>
+      <Modal onClose={() => router.back()}>
+        <div className={css.container}>
+          <div className={css.item}>
+            <div className={css.header}>
+              <h2>{data.title}</h2>
+            </div>
+            <p className={css.content}>{data.content}</p>
+            <p className={css.content}>{data.tag}</p>
+            <p className={css.date}>{data.createdAt}</p>
           </div>
-          <p className={css.content}>{note.content}</p>
-          <p className={css.content}>{note.tag}</p>
-          <p className={css.date}>{note.createdAt}</p>
-          <button className={css.button} onClick={handleClose}>
-            Close
-          </button>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+    </>
   );
 };
 

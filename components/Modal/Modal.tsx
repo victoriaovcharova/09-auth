@@ -1,15 +1,37 @@
-"use client";
+'use client';
 
-import css from "./Modal.module.css";
+import { useEffect } from 'react';
+import css from './NoteModal.module.css';
 
 type Props = {
-  onClose: () => void;
+  onClose: ()=> void
   children: React.ReactNode;
 };
 
-const Modal = ({ onClose, children }: Props) => {
+const Modal = ({ children,onClose }: Props) => {
+
+
+  useEffect(() => {
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleEsc);
+
+    return () => {
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [onClose]);
+
+  const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className={css.backdrop} onClick={onClose}>
+    <div className={css.backdrop} onClick={handleBackdropClick}>
       <div className={css.modal}>{children}</div>
     </div>
   );
