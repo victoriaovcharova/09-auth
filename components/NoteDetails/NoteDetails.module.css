@@ -35,8 +35,9 @@
 }
 
 .date {
-  font-size: 18px;
+  font-size: 14px;
   color: #888;
+  text-align: right;
 }
 
 .tag {
@@ -64,21 +65,4 @@
   text-decoration: underline;
   display: inline-block;
   background-color: transparent;
-}
-
-.routerBtn {
-  display: inline-block;
-  margin: 0 auto;
-  padding: 6px 12px;
-  font-size: 16px;
-  color: #fff;
-  background-color: #0d6efd;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.routerBtn:hover {
-  background-color: #0b5ed7;
 }
