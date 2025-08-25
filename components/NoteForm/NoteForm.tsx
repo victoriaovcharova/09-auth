@@ -1,96 +1,76 @@
 "use client";
-import { useId } from "react";
-import css from "../NoteForm/NoteForm.module.css";
-import { toast } from "react-hot-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { createNote, NewNoteData } from "@/lib/api";
-import type { Metadata } from "next";
-import { useNoteStore } from "@/lib/store/noteStore";
-import { initialDraft } from "@/lib/store/noteStore";
 
-export const metadata: Metadata = {
-  title: "NoteForm",
-  description: "NoteHub App",
-  openGraph: {
-    title: `NoteForm 08-zustand`,
-    description: "Create your new note with React Query and Zustand",
-    url: `https://08-zustand-fawn.vercel.app/notes/action/create`,
-    siteName: "NoteHub",
-    images: [
-      {
-        url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
-        width: 1200,
-        height: 630,
-        alt: "NoteHub 08-zustand",
-      },
-    ],
-    type: "article",
-  },
-};
+import css from "./NoteForm.module.css";
+import { useId } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { NewNoteData, NoteTag } from "../../types/note";
+import { createNote } from "@/lib/api/clientApi";
+
+import { useNoteDraftStore } from "@/lib/store/noteStore";
 
 export default function NoteForm() {
   const fieldId = useId();
-  const queryClient = useQueryClient();
   const router = useRouter();
-  const { draft, setDraft, clearDraft } = useNoteStore();
+  const { draft, setDraft, clearDraft } = useNoteDraftStore();
 
   const handleChange = (
     event: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
-    setDraft({ ...draft, [event.target.name]: event.target.value });
+    setDraft({
+      ...draft,
+      [event.target.name]: event.target.value,
+    });
   };
-
-  const { mutate, isPending } = useMutation({
+  const queryClient = useQueryClient();
+  const { mutate } = useMutation({
     mutationFn: createNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["notes"],
-      });
+    onSuccess() {
       clearDraft();
-      toast.success("Note created successfully");
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
       router.push("/notes/filter/All");
-    },
-    onError() {
-      toast.error("Error creating note.");
     },
   });
 
   const handleCancel = () => router.push("/notes/filter/All");
 
   const handleSubmit = (formData: FormData) => {
-    const rawValues = Object.fromEntries(formData) as unknown as NewNoteData;
-    mutate(rawValues);
-    setDraft(rawValues);
+    const values: NewNoteData = {
+      title: formData.get("title") as string,
+      content: (formData.get("content") as string) || "",
+      tag: formData.get("tag") as NoteTag,
+    };
+    mutate(values);
   };
 
   return (
-    <form className={css.form} action={handleSubmit}>
+    <form action={handleSubmit} className={css.form}>
       <div className={css.formGroup}>
         <label htmlFor={`${fieldId}-title`}>Title</label>
         <input
-          type="text"
-          name="title"
-          className={css.input}
           id={`${fieldId}-title`}
-          defaultValue={draft ? draft.title : initialDraft.title}
+          name="title"
+          value={draft?.title}
           onChange={handleChange}
+          type="text"
+          className={css.input}
           required
           minLength={3}
           maxLength={50}
         />
       </div>
+
       <div className={css.formGroup}>
         <label htmlFor={`${fieldId}-content`}>Content</label>
         <textarea
-          name="content"
-          className={css.textarea}
           id={`${fieldId}-content`}
-          defaultValue={draft ? draft.content : initialDraft.content}
+          name="content"
+          value={draft?.content}
           onChange={handleChange}
-          required
+          rows={8}
+          className={css.textarea}
           maxLength={500}
         />
       </div>
@@ -98,11 +78,12 @@ export default function NoteForm() {
       <div className={css.formGroup}>
         <label htmlFor={`${fieldId}-tag`}>Tag</label>
         <select
+          id={`${fieldId}-tag`}
           name="tag"
           className={css.select}
-          id={`${fieldId}-tag`}
-          defaultValue={draft ? draft.tag : initialDraft.tag}
+          value={draft?.tag}
           onChange={handleChange}
+          required
         >
           <option value="Todo">Todo</option>
           <option value="Work">Work</option>
@@ -111,17 +92,16 @@ export default function NoteForm() {
           <option value="Shopping">Shopping</option>
         </select>
       </div>
-
       <div className={css.actions}>
-        <button type="submit" className={css.submitButton} disabled={isPending}>
-          {isPending ? "Creating new note..." : "Create Note"}
-        </button>
         <button
           type="button"
-          className={css.cancelButton}
           onClick={handleCancel}
+          className={css.cancelButton}
         >
           Cancel
+        </button>
+        <button type="submit" className={css.submitButton}>
+          Create note
         </button>
       </div>
     </form>
