@@ -1,27 +1,32 @@
-import { nextServer } from './api';
-import { cookies } from 'next/headers';
-import { User } from '@/types/user';
+// lib/api/serverApi.ts
+import { cookies } from "next/headers";
+import { nextServer } from "./api";
+import type { User } from "@/types/user";
+
+function buildCookieHeaderFromStore(store: Awaited<ReturnType<typeof cookies>>) {
+  // cookies().getAll() -> [{ name, value }, ...] -> "a=1; b=2"
+  return store.getAll().map(c => `${c.name}=${c.value}`).join("; ");
+}
 
 export const getProfile = async (): Promise<User> => {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.toString();
+  const store = await cookies();
+  const cookieHeader = buildCookieHeaderFromStore(store);
 
-  const res = await nextServer.get<User>('/auth/me', {
-    headers: {
-      Cookie: cookieHeader,
-    },
+  const res = await nextServer.get<User>("/users/me", {
+    headers: cookieHeader ? { Cookie: cookieHeader } : undefined,
+    // withCredentials не обязателен, т.к. мы пробрасываем Cookie вручную
   });
 
   return res.data;
 };
 
-export const checkServerSession = async () => {
-  const cookieStore = await cookies();
-  const response = await nextServer.get('/auth/session', {
-    headers: {
-      Cookie: cookieStore.toString(),
-    },
+export const checkServerSession = async (): Promise<boolean> => {
+  const store = await cookies();
+  const cookieHeader = buildCookieHeaderFromStore(store);
+
+  const res = await nextServer.get<{ success: boolean }>("/auth/session", {
+    headers: cookieHeader ? { Cookie: cookieHeader } : undefined,
   });
 
-  return response;
+  return !!res.data?.success;
 };
