@@ -1,34 +1,78 @@
-import { useEffect } from "react";
-import { createPortal } from "react-dom";
-import css from "../Modal/Modal.module.css";
-
-
+'use client'
+import { createPortal } from 'react-dom'
+import css from './Modal.module.css'
+import type React from 'react'
+import { useEffect } from 'react'
 interface ModalProps{
-    children: React.ReactNode;
-    onClose: () => void;
+    onClose: () => void
+     
+    children?: React.ReactNode;
+
 }
 
-export default function Modal({ children, onClose }: ModalProps) {
-    useEffect(() => {
-      const handleKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-      document.documentElement.style.overflow = "hidden";
-      document.body.style.overflow = "hidden";
 
-      window.addEventListener('keydown', handleKey);
-      
-      return () => {
-        document.documentElement.style.overflow = "";
-        document.body.style.overflow = "";
-        window.removeEventListener('keydown', handleKey);
-        };
-    }, [onClose]);
 
-  return createPortal(
-    <div className={css.backdrop} onClick={onClose}>
-      <div className={css.modal} onClick={(e) => e.stopPropagation()}>
-        {children}
-      </div>
-    </div>,
+const BoxModal = ({children}: {children?: React.ReactNode}) =>{
+    return(
+        <div className={css.modal} >
+
+        {children}         
+    </div>
+    )
+    
+    
+}
+
+export default function Modal({onClose, children}: ModalProps){
+
+    
+
+    const handleClickBackDrop = (event: React.MouseEvent<HTMLDivElement>) =>{
+        if(event.target == event.currentTarget){
+            onClose();
+        }
+    }
+
+    useEffect(() =>{
+        const handleKeyDown = (event: KeyboardEvent) =>{
+            if(event.key === 'Escape'){
+                onClose();
+            }
+        }
+
+        document.addEventListener('keydown', handleKeyDown)
+        document.body.style.overflow = 'hidden'
+
+        return () =>{
+            document.removeEventListener('keydown', handleKeyDown)
+        document.body.style.overflow = ''
+        }
+    }, [onClose])
+   
+    
+
+    
+
+
+
+
+    return(
+        createPortal(
+            <div
+            onClick={handleClickBackDrop}
+            className={css.backdrop}
+            role="dialog"
+            aria-modal="true"
+            >
+                <BoxModal>
+                    {children}
+                </BoxModal>
+                    
+                
+            </div>,
+
     document.body
-  );
-};
+)
+    )
+    
+}

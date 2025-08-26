@@ -1,47 +1,83 @@
-'use client';
-
-import css from './NotePreview.module.css';
+'use client'
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { fetchNoteById } from '@/lib/api/clientApi';
-import Modal from '@/components/Modal/Modal';
+import {DehydratedState, useQuery, HydrationBoundary} from "@tanstack/react-query";
+import { fetchNoteById } from '@/lib/ClientApi';
+import Modal from "@/components/Modal/Modal";
+import css from './NotePreview.module.css'
 
-type Props = {
-    id: string;
+interface NoteModalPreviewProps{
+    id: string,
+    dehydratedState: DehydratedState
+    
 }
 
-export default function NotePreview({ id }: Props) {
+
+
+const NoteModalPreview = ({id, dehydratedState}: NoteModalPreviewProps) =>{
+
     const router = useRouter();
+    const handleClose = () => router.back();
+
     
-    const handleClickClose = () => {
-        router.back()
-    };
-   
-    
-    const { data, isLoading, isError } = useQuery({
+
+    const {data, isLoading, error} = useQuery({
         queryKey: ['note', id],
         queryFn: () => fetchNoteById(id),
-        refetchOnMount: false,
-    });
-    
-     if (isLoading) return <p>Loading, please wait...</p>;
-  if (isError) return <p>Something went wrong.</p>;
-  if (!data) return <p>Note not found</p>
+        refetchOnMount: false
+    })
 
-    return (
-        <Modal onClose={handleClickClose}>
-        <div className={css.container}>
-	<div className={css.item}>
-	  <div className={css.header}>
-                    <h2>{data.title}</h2>
-	  </div>
-                <p className={css.content}>{data.content}</p>
-                <p className={css.date}>{new Date(data.createdAt).toLocaleString()}</p>
-                </div>
-                <button onClick={handleClickClose} className={css.backBtn}>Close</button>
-            </div>
+
+    if(isLoading){
+        return(
+          <HydrationBoundary state={dehydratedState}>
+            <Modal onClose={handleClose}>
+                <p>Loading...</p>
             </Modal>
-    );
+          </HydrationBoundary>
+            
+        )
+    }
 
+    if(error){
+        return(
+          <HydrationBoundary state={dehydratedState}>
+            <Modal onClose={handleClose}>
+                <p>Something went wrong...</p>
+            </Modal>
+          </HydrationBoundary>  
+        )
+        
+    }
+
+
+    return(
+      <HydrationBoundary state={dehydratedState}>
+        <Modal onClose={handleClose}>
+        <div className={css.container}>
+          <div className={css.item}>
+            <div className={css.header}>
+              <h2>{data?.title}</h2>
+            </div>
+            <div>
+              <p className={css.content}>{data?.content}</p>
+            </div>
+          </div>
+          <div className={css.infoDiv}>
+            <button className={css.backBtn} onClick={handleClose}>Close</button>
+            <p className={css.tag}>{data?.tag}</p>
+            <p className={css.date}>{data?.createdAt.slice(0, 10)}</p>
+          </div>
+          
+            
+          
+        </div>
+      </Modal>
+
+      </HydrationBoundary>
+      
+    )
 
 }
+
+
+export default NoteModalPreview;

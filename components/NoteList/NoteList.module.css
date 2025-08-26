@@ -5,9 +5,10 @@
     padding: 0;
     margin: 0;
     list-style: none;
-}
-
-.listItem {
+    margin-bottom: 15px;
+  }
+  
+  .listItem {
     background-color: #ffffff;
     border: 1px solid #dee2e6;
     border-radius: 8px;
@@ -17,16 +18,16 @@
     flex-direction: column;
     justify-content: space-between;
     min-height: 180px;
-}
-
-.title {
+  }
+  
+  .title {
     font-size: 18px;
     font-weight: 600;
     margin: 0 0 8px 0;
     color: #212529;
-}
-
-.content {
+  }
+  
+  .content {
     margin: 0;
     flex-grow: 1;
     font-size: 14px;
@@ -36,9 +37,9 @@
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-}
-
-.button {
+  }
+  
+  .button {
     align-self: flex-end;
     padding: 6px 12px;
     font-size: 14px;
@@ -48,20 +49,20 @@
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s ease;
-}
-
-.button:hover {
+  }
+  
+  .button:hover {
     background-color: #bb2d3b;
-}
-
-.footer {
+  }
+  
+  .footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-top: auto;
-}
-
-.tag {
+  }
+  
+  .tag {
     display: inline-block;
     padding: 4px 8px;
     font-size: 12px;
@@ -73,23 +74,5 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.link {
-    align-self: flex-end;
-    padding: 6px 12px;
-    font-size: 14px;
-    color: #fff;
-    background-color: #0d6efd;
-    /* синій колір */
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    transition: background-color 0.2s ease;
-}
-
-.link:hover {
-    background-color: #0b5ed7;
-}
+  }
+  
