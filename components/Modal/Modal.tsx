@@ -1,45 +1,38 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
-import css from './Modal.module.css';
+import { useEffect } from 'react';
+import ReactDOM from 'react-dom';
+import styles from './Modal.module.css';
 
-interface ModalProps {
-  children: React.ReactNode;
+type ModalProps = {
   onClose: () => void;
-}
+  children: React.ReactNode;
+};
 
-const Modal = ({ children, onClose }: ModalProps) => {
+export default function Modal({ onClose, children }: ModalProps) {
+  // Закриття при натисканні Escape
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
     document.body.style.overflow = 'hidden';
+
     return () => {
+      document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
     };
-  }, []);
-
-  const handleKeyDown = useCallback((e: KeyboardEvent): void => {
-    if (e.code === 'Escape') {
-      onClose();
-    }
   }, [onClose]);
 
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) onClose();
+  };
 
-  const handleBackdropClick = useCallback((e: React.MouseEvent): void => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  }, [onClose]);
-
-  return createPortal(
-    <div className={css.backdrop} onClick={handleBackdropClick} role="dialog" aria-modal="true">
-      <div className={css.modal}>{children}</div>
+  return ReactDOM.createPortal(
+    <div className={styles.backdrop} onClick={handleBackdropClick}>
+      <div className={styles.modal}>{children}</div>
     </div>,
     document.body
   );
-};
-
-export default Modal;
+}

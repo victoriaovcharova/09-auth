@@ -1,40 +1,50 @@
-'use client';
-
-import { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import css from './TagsMenu.module.css'; // use your given CSS
 import Link from 'next/link';
-import css from './TagsMenu.module.css';
-import type { NoteTag } from '@/types/note';
 
-const tags: NoteTag[] = ['All', 'Personal', 'Work', 'Todo', 'Meeting', 'Shopping'];
+const tags = ['All', 'Work', 'Personal', 'Meeting', 'Shopping', 'Todo'];
 
 export default function TagsMenu() {
   const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
-    <div className={css.menuContainer}>
-      <button 
+    <div className={css.menuContainer} ref={menuRef}>
+      <button
         className={css.menuButton}
-        onClick={() => setIsOpen(!isOpen)}
-        aria-expanded={isOpen}
+        onClick={() => setIsOpen((prev) => !prev)}
       >
-        Notes ▾
+        Notes
       </button>
-      
+
       {isOpen && (
         <ul className={css.menuList}>
-          {tags.map((tag) => (
-            <li key={tag} className={css.menuItem}>
-              <Link
-                href={tag === 'All' ? '/notes/filter/All' : `/notes/filter/${tag}`}
-                className={css.menuLink}
-                onClick={() => setIsOpen(false)}
-                prefetch={false}
-              >
-                {tag}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {tags.map((tag) => (
+          <li key={tag} className={css.menuItem} onClick={() => setIsOpen(false)}>
+            <Link
+              href={
+                tag === 'All'
+                  ? '/notes/filter/All'
+                  : `/notes/filter/${encodeURIComponent(tag)}`
+              }
+              className={css.menuLink}
+            >
+              {tag}
+            </Link>
+          </li>
+        ))}
+      </ul>
       )}
     </div>
   );

@@ -1,117 +1,154 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createNote } from '@/lib/api';
-import { useNoteStore } from '@/lib/store/noteStore';
-import css from './NoteForm.module.css';
-import type { NoteTag } from '@/types/note';
+import { useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import * as Yup from "yup";
+import { createNote } from "@/lib/api/clientApi";
+import css from "./NoteForm.module.css";
+import { CreateNoteDto } from "@/types/CreateNoteDto";
+import { useNoteStore } from "@/lib/store/noteStore";
+import { useRouter } from "next/navigation";
+
+const TAG_OPTIONS = ["Work", "Personal", "Meeting", "Shopping", "Todo"];
+
+const validationSchema = Yup.object({
+  title: Yup.string()
+    .min(3, "Title must be at least 3 characters")
+    .max(50, "Title must be at most 50 characters")
+    .required("Title is required"),
+  content: Yup.string()
+    .max(500, "Content must be at most 500 characters")
+    .notRequired(),
+  tag: Yup.string()
+    .oneOf(TAG_OPTIONS, "Invalid tag")
+    .required("Tag is required"),
+});
 
 export default function NoteForm() {
   const router = useRouter();
-  const { draft, setDraft, clearDraft } = useNoteStore();
-  const [title, setTitle] = useState(draft.title);
-  const [content, setContent] = useState(draft.content);
-  const [tag, setTag] = useState<NoteTag>(draft.tag);
-
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    setDraft({ title, content, tag });
-  }, [title, content, tag, setDraft]);
+  const draft = useNoteStore((state) => state.draft);
+  const setDraft = useNoteStore((state) => state.setDraft);
+  const clearDraft = useNoteStore((state) => state.clearDraft);
 
-  const createNoteMutation = useMutation({
+  const [formData, setFormData] = useState<CreateNoteDto>(draft);
+  const [errors, setErrors] = useState<Partial<CreateNoteDto>>({});
+
+  useEffect(() => {
+    setFormData(draft);
+  }, [draft]);
+
+
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setDraft({ [name]: value });
+  }
+
+  const mutation = useMutation({
     mutationFn: createNote,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
       clearDraft();
-      router.back();
+      router.back(); 
     },
   });
 
-  const handleSubmit = async (formData: FormData) => {
-    const title = formData.get('title') as string;
-    const content = formData.get('content') as string;
-    const tag = formData.get('tag') as NoteTag;
+  async function handleSubmit(form: FormData) {
+    const values: CreateNoteDto = {
+      title: form.get("title") as string,
+      content: (form.get("content") as string) || "",
+      tag: form.get("tag") as string,
+    };
 
-    createNoteMutation.mutate({ title, content, tag });
-  };
+    try {
+      await validationSchema.validate(values, { abortEarly: false });
+      setErrors({});
+      mutation.mutate(values);
+    } catch (err) {
+      if (err instanceof Yup.ValidationError) {
+        const newErrors: Partial<CreateNoteDto> = {};
+        err.inner.forEach((e) => {
+          if (e.path) {
+            newErrors[e.path as keyof CreateNoteDto] = e.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+    }
+  }
 
-  const handleCancel = () => {
+
+  function handleCancel() {
     router.back();
-  };
-
-  const isPending = createNoteMutation.isPending;
+  }
 
   return (
     <form className={css.form} action={handleSubmit}>
-      <h2 className={css.title}>Create New Note</h2>
       <div className={css.formGroup}>
-        <label htmlFor="title" className={css.label}>Title</label>
+        <label htmlFor="title">Title</label>
         <input
           id="title"
           name="title"
           type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          value={formData.title}
+          onChange={handleChange}
           className={css.input}
-          placeholder="Note title"
-          required
-          disabled={isPending}
         />
+        {errors.title && <div className={css.error}>{errors.title}</div>}
       </div>
+
       <div className={css.formGroup}>
-        <label htmlFor="content" className={css.label}>Content</label>
+        <label htmlFor="content">Content</label>
         <textarea
           id="content"
           name="content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
+          rows={5}
+          value={formData.content}
+          onChange={handleChange}
           className={css.textarea}
-          placeholder="Note content"
-          required
-          disabled={isPending}
-          rows={6}
         />
+        {errors.content && <div className={css.error}>{errors.content}</div>}
       </div>
+
       <div className={css.formGroup}>
-        <label htmlFor="tag" className={css.label}>Tag</label>
+        <label htmlFor="tag">Tag</label>
         <select
           id="tag"
           name="tag"
-          value={tag}
-          onChange={(e) => setTag(e.target.value as NoteTag)}
+          value={formData.tag}
+          onChange={handleChange}
           className={css.select}
-          disabled={isPending}
         >
-          <option value="Personal">Personal</option>
-          <option value="Work">Work</option>
-          <option value="Todo">Todo</option>
-          <option value="Meeting">Meeting</option>
-          <option value="Shopping">Shopping</option>
+          {TAG_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
         </select>
+        {errors.tag && <div className={css.error}>{errors.tag}</div>}
       </div>
-      <div className={css.buttonGroup}>
+
+      <div className={css.actions}>
+        <button
+          type="submit"
+          className={css.submitButton}
+          disabled={mutation.isPending}
+        >
+          {mutation.isPending ? "Creating..." : "Create Note"}
+        </button>
+
         <button
           type="button"
           className={css.cancelButton}
           onClick={handleCancel}
-          disabled={isPending}
         >
           Cancel
         </button>
-        <button
-          type="submit"
-          className={css.button}
-          disabled={isPending || !title || !content}
-        >
-          {isPending ? 'Creating...' : 'Create Note'}
-        </button>
       </div>
-      {createNoteMutation.isError && (
-        <p className={css.error}>Error creating note: {createNoteMutation.error.message}</p>
-      )}
     </form>
   );
 }
