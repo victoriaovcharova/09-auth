@@ -2,11 +2,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  text-align: center;
-
   padding: 1rem 2rem;
-  background-color: #333;
-  color: white;
+  background-color: #d87cb2;
+  color: rgb(255, 255, 255);
 }
 
 .header a {
@@ -14,20 +12,10 @@
   color: white;
   font-size: 1.5rem;
   font-weight: bold;
-  transition:
-    color 0.3s ease,
-    text-shadow 0.3s ease;
 }
 
-
-.logo:hover {
-  color: #fbffd5;
-  text-shadow:
-    0 0 5px #fff,
-    0 0 10px #fff,
-    0 0 20px #ffd700,
-    0 0 30px #ffd700,
-    0 0 40px #ff8c00;
+.header a:hover {
+  color: #ddd;
 }
 
 .navigation {
@@ -38,14 +26,9 @@
   gap: 1rem;
 }
 
-.navigation li {
-  display: flex;
-  align-items: center;
-}
-
 .navigation li a {
   text-decoration: none;
-  color: white;
+  color: rgb(34, 26, 26);
   font-size: 1rem;
 }
 

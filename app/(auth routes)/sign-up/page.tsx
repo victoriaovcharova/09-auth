@@ -1,41 +1,62 @@
-'use client';
-import { useRouter } from 'next/navigation';
-import { RegisterRequest } from '@/types/user';
-import { registerUser } from '@/lib/api/clientApi';
-import { useState } from 'react';
-import { ApiError } from '@/types/error';
-import css from"./SignUpPage.module.css"
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-const Register = () => {
+import { register } from "../../../lib/api/clientApi";
+import { RegisterRequest } from "../../../types/user";
+import { useAuthStore } from "../../../lib/store/authStore";
+
+import css from "./SignUpPage.module.css";
+
+
+export default function SignUpPage() {
   const router = useRouter();
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  const handleSRegister = async (formData: FormData) => {
+  const setUser = useAuthStore((state) => state.setUser);
+
+  const handleSubmit = async (formData: FormData) => {
     try {
-      const data = Object.fromEntries(formData) as RegisterRequest;
-      const res = await registerUser(data);
+      // Типізуємо дані форми
+      const formValues = Object.fromEntries(formData) as RegisterRequest;
+      // Виконуємо запит
+      const res = await register(formValues);
+      // Виконуємо редірект або відображаємо помилку
       if (res) {
-        router.push('/profile');
+        setUser(res);
+        router.push("/profile");
       } else {
-        setError('invalid email or password');
+        setError("Invalid email or password");
       }
     } catch (error) {
-      setError((error as ApiError).message);
+      console.log("error", error);
+      setError("Invalid email or password");
     }
   };
-
   return (
     <main className={css.mainContent}>
-      <h1 className={css.formTitle}>Sign up</h1>
-      <form action={handleSRegister} className={css.form}>
+      <form className={css.form} action={handleSubmit}>
+        <h1 className={css.formTitle}>Sign up</h1>
         <div className={css.formGroup}>
           <label htmlFor="email">Email</label>
-          <input id="email" type="email" name="email" className={css.input} required />
+          <input
+            id="email"
+            type="email"
+            name="email"
+            className={css.input}
+            required
+          />
         </div>
 
         <div className={css.formGroup}>
           <label htmlFor="password">Password</label>
-          <input id="password" type="password" name="password" className={css.input} required />
+          <input
+            id="password"
+            type="password"
+            name="password"
+            className={css.input}
+            required
+          />
         </div>
 
         <div className={css.actions}>
@@ -43,11 +64,8 @@ const Register = () => {
             Register
           </button>
         </div>
-
-        <p className={css.error}>{error}</p>
       </form>
+      {error && <p>{error}</p>}
     </main>
   );
-};
-
-export default Register;
+}
