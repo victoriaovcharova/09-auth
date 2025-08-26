@@ -1,16 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+interface ErrorProps {
+  error: Error;
+};
 
-export default function NotesError({ error, reset }: { error: Error; reset: () => void }) {
-  useEffect(() => {
-    console.error('Error occured:', error);
-  }, [error]);
-
+const Error = ({ error}:ErrorProps) => {
   return (
-    <div>
-      <h2>Something went wrong while loading notes.</h2>
-      <button onClick={() => reset()}>Try again</button>
-    </div>
-  );
+    <p>Could not fetch note details. {error.message}</p>
+  )
 }
+
+export default Error;

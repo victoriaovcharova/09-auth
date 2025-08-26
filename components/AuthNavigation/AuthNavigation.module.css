@@ -23,8 +23,6 @@
 .navigationItem {
   display: flex;
   align-items: center;
-  justify-content: end;
-  gap: 16px;
 }
 
 .navigationLink {

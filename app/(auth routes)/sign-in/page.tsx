@@ -1,81 +1,64 @@
-"use client";
+"use client"
 
 import { useState } from "react";
+import css from "./SignInPage.module.css";
+import { login, SignInRequest } from "@/lib/api/clientApi";
 import { useRouter } from "next/navigation";
+import { ApiError } from "@/app/api/api";
 import { useAuthStore } from "@/lib/store/authStore";
-import { loginUser } from "@/lib/api/clientApi"; 
-import css from "./page.module.css";
 
-export default function SignInPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const { setUser, setLoading, loading } = useAuthStore(); 
-  const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+const SignIn = () => {
+  const router = useRouter()
+  const [error, setError] = useState("")
+  const setUser = useAuthStore((state)=>state.setUser)
 
+  const handleSubmit = async (formData: FormData) => {
     try {
-      const userData = await loginUser({email, password});
-      if (userData) {
-        setUser(userData);
-        router.push("/profile");
+      const data = Object.fromEntries(formData) as unknown as SignInRequest
+
+      const response = await login(data)
+      if (response) {
+        setUser(response)
+        router.push("/profile")
       } else {
-        setError("Invalid email or password");
+        setError("Invalid email or password")
       }
-    } catch (err) {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
+
+    } catch (error) {
+      setError(
+        (error as ApiError).response?.data?.error ??
+          (error as ApiError).message ??
+          'Oops... some error'
+      )
     }
-  };
+  }
 
   return (
     <main className={css.mainContent}>
-      <form className={css.form} onSubmit={handleSubmit}>
+      <form className={css.form} action={handleSubmit}>
         <h1 className={css.formTitle}>Sign in</h1>
 
         <div className={css.formGroup}>
           <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="email"
-            name="email"
-            className={css.input}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+          <input id="email" type="email" name="email" className={css.input} required />
         </div>
 
         <div className={css.formGroup}>
           <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            name="password"
-            className={css.input}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <input id="password" type="password" name="password" className={css.input} required />
         </div>
 
         <div className={css.actions}>
-          <button
-            type="submit"
-            className={css.submitButton}
-            disabled={loading}
-          >
-            {loading ? "Signing in..." : "Log in"}
+          <button type="submit" className={css.submitButton}>
+            Log in
           </button>
         </div>
 
-        {error && <p className={css.error}>{error}</p>}
+        <p className={css.error}>{error}</p>
       </form>
     </main>
-  );
+  )
 }
+
+export default SignIn;

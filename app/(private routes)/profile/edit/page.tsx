@@ -1,49 +1,79 @@
-import type { Metadata } from "next";
-import css from "./EditProfilePage.module.css";
-import { getUserServer } from "@/lib/api/serverApi";
-import { patchUserProfile } from "@/lib/api/clientApi";
-import EditProfileForm from "./EditProfileForm.client";
-import type { User } from "@/types/user";
-import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+"use client"
 
-export const metadata: Metadata = {
-  title: "Edit Profile | NoteHub",
-  robots: { index: false, follow: false },
-};
+import Image from "next/image"
+import css from "./EditProfilePage.module.css"
+import { getMe, updateMe } from "@/lib/api/clientApi"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuthStore } from "@/lib/store/authStore"
 
-export type FormState = {
-  ok: boolean;
-  error?: string;
-  user?: User;
-};
 
-export default async function EditProfilePage() {
-  const user = await getUserServer();
-  if (!user) {
-    redirect("/sign-in");
+const EditProfile = () => {
+  const [username, setUsername] = useState("")
+  const router = useRouter()
+  const user = useAuthStore((state) => state.user)
+  const setUser = useAuthStore((state) => state.setUser)
+
+  useEffect(() => {
+    getMe().then((user) => {
+      setUsername(user.username ?? "")
+    })
+  }, [])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUsername(e.target.value)
   }
 
-  async function updateProfileAction(_: FormState, formData: FormData): Promise<FormState> {
-    "use server";
-
-    const username = (formData.get("username") || "").toString().trim();
-    if (!username) {
-      return { ok: false, error: "Username is required" };
-    }
-
-    try {
-      const updated = await patchUserProfile({ username });
-      revalidatePath("/profile");
-      return { ok: true, user: updated };
-    } catch (e) {
-      return { ok: false, error: "Failed to update profile" };
-    }
+  const handleSaveUser = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const updatedUser = await updateMe({ username })
+    setUser(updatedUser)
+    router.push("/profile")
   }
+
+  const handleBack = () => {
+    router.back()
+  }
+
 
   return (
     <main className={css.mainContent}>
-      <EditProfileForm user={user} updateProfile={updateProfileAction} />
+      <div className={css.profileCard}>
+        <h1 className={css.formTitle}>Edit Profile</h1>
+
+        <Image
+          src={user?.avatar ?? "https://ac.goit.global/fullstack/react/default-avatar.jpg"}
+          alt="User Avatar"
+          width={120}
+          height={120}
+          className={css.avatar}
+        />
+
+        <form className={css.profileInfo} onSubmit={handleSaveUser}>
+          <div className={css.usernameWrapper}>
+            <label htmlFor="username">Username:</label>
+            <input id="username"
+              type="text"
+              className={css.input}
+              value={username}
+              onChange={handleChange}
+            />
+          </div>
+
+          <p>Email: { user?.email}</p>
+
+          <div className={css.actions}>
+            <button type="submit" className={css.saveButton}>
+              Save
+            </button>
+            <button type="button" className={css.cancelButton} onClick={handleBack}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
     </main>
-  );
+  )
 }
+
+export default EditProfile

@@ -1,67 +1,99 @@
-import { api } from './api';
-import type { User } from '@/types/user';
-import type { Note } from '@/types/note';
-import { FetchNotesParams } from '@/types/FetchNotesParams';
-import { FetchNotesResponse } from '@/types/FetchNotesResponse';
-import { CreateNoteDto } from '@/types/CreateNoteDto';
+import { User } from "@/types/user";
+import { nextServer} from "./api";
+import { NewNote, Note } from "@/types/note";
 
-interface AuthPayload {
-  email: string;
-  password: string;
+export interface SignUpRequest {
+  email: string,
+  password: string,
 }
 
-// ================ Session and Login ========
-
-export async function getAuthSession() {
-  const res = await api.get('/auth/session');
-  return res.data;
+export interface SignInRequest {
+  email: string,
+  password: string,
 }
 
-export async function getCurrentUser(): Promise<User> {
-  const res = await api.get<User>('/users/me');
-  return res.data;
+export interface CheckSessionRequest {
+  success: boolean;
 }
 
-export async function patchUserProfile(data: Partial<User>): Promise<User> {
-  const res = await api.patch<User>('/users/me', data);
-  return res.data;
+export interface UpdateUserRequest {
+  username: string;
 }
 
-export async function registerUser(data: AuthPayload): Promise<User> {
-  const res = await api.post<User>('/auth/register', data);
-  return res.data;
+export interface NotesHttpResponse {
+  notes: Note[];
+  totalPages: number;
 }
 
-export async function loginUser(data: AuthPayload): Promise<User> {
-  const res = await api.post<User>('/auth/login', data);
-  return res.data;
+export const register = async (data: SignUpRequest) => {
+  const response = await nextServer.post<User>("/auth/register", data)
+  return response.data;
 }
 
-export async function logoutUser(): Promise<void> {
-  await api.post('/auth/logout');
+export const login = async (data: SignInRequest) => {
+  const response = await nextServer.post<User>("/auth/login", data)
+  return response.data;
 }
 
-// ================ NOTES API ========
-
-export async function fetchNotes(params: FetchNotesParams): Promise<FetchNotesResponse> {
-  const res = await api.get<FetchNotesResponse>('/notes', { params });
-  return res.data;
+export const checkSession = async () => {
+  const response = await nextServer.get<CheckSessionRequest>("/auth/session")
+  return response.data.success;
 }
 
-// POST /notes
-export async function createNote(note: CreateNoteDto): Promise<Note> {
-  const res = await api.post<Note>('/notes', note);
-  return res.data;
+export const getMe = async () => {
+  const response = await nextServer.get<User>("/users/me")
+  return response.data;
 }
 
-// DELETE /notes/:id
-export async function deleteNote(id: string): Promise<Note> {
-  const res = await api.delete<Note>(`/notes/${id}`);
-  return res.data;
+export const logout = async ():Promise<void> => {
+  const response = await nextServer.post("/auth/logout")
+  return response.data;
 }
 
-// GET /notes/:id
-export async function fetchNoteById(id: string): Promise<Note> {
-  const res = await api.get<Note>(`/notes/${id}`);
-  return res.data;
+export const updateMe = async (body: UpdateUserRequest)=>{
+  const response = await nextServer.patch<User>("/users/me", body)
+  return response.data;
+}
+
+export async function fetchNotes(search: string, page: number, tag?: string ) {
+  try {
+    const response = await nextServer.get<NotesHttpResponse>("/notes", {
+      params: {
+        ...(search !== '' && { search }),
+        page,
+        perPage: 12,
+        ...(tag && { tag }),
+      },
+    })
+    return response.data;
+  } catch {
+    throw new Error("Fetch tasks failed");
+  }
+}
+
+export async function createNote(newNote: NewNote):Promise<Note> {
+  try {
+    const response = await nextServer.post<Note>("/notes", newNote)
+    return response.data;
+  } catch {
+    throw new Error("Create task failed");
+  }
+}
+
+export async function deleteNote(noteId: string) {
+  try {
+    const response = await nextServer.delete<Note>(`/notes/${noteId}`)
+    return response.data;
+  } catch {
+    throw new Error("Delete task failed");
+  }
+}
+
+export async function fetchNoteById(noteId:string) {
+  try {
+    const response = await nextServer.get<Note>(`/notes/${noteId}`)
+    return response.data;
+  } catch {
+    throw new Error("Could not fetch note details.");
+  }
 }
