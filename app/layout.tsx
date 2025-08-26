@@ -1,64 +1,54 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono, Roboto } from "next/font/google";
-import "./globals.css";
-import Header from "@/components/Header/Header";
-import Footer from "@/components/Footer/Footer";
-import TanStackProvider from "@/components/TanStackProvider/TanStackProvider";
-import AuthProvider from "@/components/AuthProvider/AuthProvider";
+import type { Metadata } from 'next';
+import { Roboto } from 'next/font/google';
+import './globals.css';
+import Header from '@/components/Header/Header';
+import Footer from '@/components/Footer/Footer';
+import TanStackProvider from '@/components/TanStackProvider/TanStackProvider';
+import AuthProvider from '@/components/AuthProvider/AuthProvider';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const roboto = Roboto({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-roboto',
+  display: 'swap',
 });
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const fontRoboto = Roboto({
-  variable: "--font-roboto",
-  subsets: ["latin"],
-  weight: "variable",
-  display: "auto"
-})
 
 export const metadata: Metadata = {
-  title: "NoteHub",
-  description: "Notes Management Service",
+  title: 'NoteHub',
+  description: 'Simple app to write notes',
   openGraph: {
-    title: "NoteHub",
-    description: "Notes Management Service",
-    url: "https://notehub.com",
+    title: 'NoteHub',
+    description: 'Simple app to write notes',
+    url: 'https://09-auth-three-lake.vercel.app/',
     images: [
       {
-        url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
-        width: 1374,
-        height: 916,
-        alt: "NoteHub logo"
+        url: 'https://ac.goit.global/fullstack/react/notehub-og-meta.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'NoteHub',
       },
     ],
-  }
+  },
 };
 
-export default function RootLayout({
-  children,
-  modal,
-}: Readonly<{
+interface RootLayoutProps {
   children: React.ReactNode;
   modal: React.ReactNode;
-}>) {
+}
+
+export default function RootLayout({ children, modal }: RootLayoutProps) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} ${fontRoboto.variable}`}>
+      <body className={`${roboto.variable}`}>
         <TanStackProvider>
           <AuthProvider>
-            <Header/>
+            <Header />
             {children}
             {modal}
-            <Footer/>
+            <Footer />
           </AuthProvider>
         </TanStackProvider>
+        <div id="modal-root" />
       </body>
     </html>
   );

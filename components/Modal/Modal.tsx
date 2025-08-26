@@ -1,45 +1,48 @@
-"use client"
+'use client';
 
-import { createPortal } from "react-dom";
-import css from "./Modal.module.css"
-import { useEffect } from "react";
+import { createPortal } from 'react-dom';
+import css from './Modal.module.css';
+import { useEffect } from 'react';
 
-
-interface ModalProps{
-  onClose: () => void;
+interface ModalProps {
   children: React.ReactNode;
+  onClose: () => void;
 }
 
-const Modal = ({onClose, children}:ModalProps)=> {
+const Modal = ({ children, onClose }: ModalProps) => {
   useEffect(() => {
-    const handleKeydown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    }
-    document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", handleKeydown);
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeydown);
 
     return () => {
-      document.body.style.overflow = "";
-      document.removeEventListener("keydown", handleKeydown);
-    }
+      document.removeEventListener('keydown', handleKeydown);
+    };
   }, [onClose]);
-  
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) onClose()
-  }
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  };
 
   return createPortal(
-    <div
-      className={css.backdrop}
-      role="dialog"
-      aria-modal="true"
-      onClick={handleBackdropClick}
-    >
-      <div className={css.modal}>
-        {children}
-      </div>
+    <div className={css.backdrop} onClick={handleClick} role="dialog" aria-modal="true" aria-label="modal">
+      <div className={css.modal}>{children}</div>
     </div>,
-    document.body
+    document.getElementById('modal-root') as HTMLDivElement
   );
-}
+};
+
 export default Modal;

@@ -1,11 +1,9 @@
-import Link from "next/link"
-import css from "./Header.module.css"
-import TagsMenu from "../TagsMenu/TagsMenu";
-import AuthNavigation from "../AuthNavigation/AuthNavigation";
-import cssauth from "../AuthNavigation/AuthNavigation.module.css"
+import Link from 'next/link';
+import css from './Header.module.css';
+import TagsMenu from '../TagsMenu/TagsMenu';
+import AuthNavigation from '../AuthNavigation/AuthNavigation';
 
-const Header = async () => {
-  
+const Header = () => {
   return (
     <header className={css.header}>
       <Link href="/" aria-label="Home">
@@ -13,17 +11,19 @@ const Header = async () => {
       </Link>
       <nav aria-label="Main Navigation">
         <ul className={css.navigation}>
-          <li className={cssauth.navigationItem}>
+          <li>
             <Link href="/">Home</Link>
           </li>
-          <li className={cssauth.navigationItem}>
-            <TagsMenu/>
+          <li>
+            <TagsMenu />
           </li>
-          <AuthNavigation/>
+          <li>
+            <AuthNavigation />
+          </li>
         </ul>
       </nav>
     </header>
-  )
-}
+  );
+};
 
 export default Header;

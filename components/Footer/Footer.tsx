@@ -1,5 +1,4 @@
-import Link from "next/link"
-import css from "./Footer.module.css"
+import css from './Footer.module.css';
 
 const Footer = () => {
   return (
@@ -7,15 +6,15 @@ const Footer = () => {
       <div className={css.content}>
         <p>© {new Date().getFullYear()} NoteHub. All rights reserved.</p>
         <div className={css.wrap}>
-          <p>Developer: Denys Koval</p>
+          <p>Developer: Illia Poliakov</p>
           <p>
             Contact us:
-            <Link href="mailto:denyskoval.dev@gmail.com">denyskoval.dev@gmail.com</Link>
+            <a href="mailto:poliakov.illia1@gmail.com"> poliakov.illia1@gmail.com</a>
           </p>
         </div>
       </div>
     </footer>
-  )
-}
+  );
+};
 
 export default Footer;

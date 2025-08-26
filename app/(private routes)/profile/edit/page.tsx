@@ -1,79 +1,70 @@
-"use client"
+'use client';
 
-import Image from "next/image"
-import css from "./EditProfilePage.module.css"
-import { getMe, updateMe } from "@/lib/api/clientApi"
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { useAuthStore } from "@/lib/store/authStore"
-
+import Image from 'next/image';
+import css from './EditProfile.module.css';
+import { useEffect, useState } from 'react';
+import { getMe, updateMe } from '@/lib/api/clientApi';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/lib/store/authStore';
+import { User } from '@/types/user';
 
 const EditProfile = () => {
-  const [username, setUsername] = useState("")
-  const router = useRouter()
-  const user = useAuthStore((state) => state.user)
-  const setUser = useAuthStore((state) => state.setUser)
+  const [userData, setUserData] = useState<User>();
+  const setUser = useAuthStore(state => state.setUser);
+  const router = useRouter();
 
   useEffect(() => {
-    getMe().then((user) => {
-      setUsername(user.username ?? "")
-    })
-  }, [])
+    getMe().then(setUserData);
+  }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUsername(e.target.value)
-  }
+  const handleSubmit = async () => {
+    if (!userData) return;
+    try {
+      setUser(userData);
+      await updateMe({ username: userData?.username });
+      router.push('/profile');
+    } catch (error) {
+      console.error('Oops, some error:', error);
+    }
+  };
 
-  const handleSaveUser = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const updatedUser = await updateMe({ username })
-    setUser(updatedUser)
-    router.push("/profile")
-  }
-
-  const handleBack = () => {
-    router.back()
-  }
-
+  const handleReturn = () => {
+    router.back();
+  };
 
   return (
     <main className={css.mainContent}>
       <div className={css.profileCard}>
         <h1 className={css.formTitle}>Edit Profile</h1>
 
-        <Image
-          src={user?.avatar ?? "https://ac.goit.global/fullstack/react/default-avatar.jpg"}
-          alt="User Avatar"
-          width={120}
-          height={120}
-          className={css.avatar}
-        />
+        {userData?.avatar && <Image src={userData?.avatar} alt="User Avatar" width={120} height={120} className={css.avatar} />}
 
-        <form className={css.profileInfo} onSubmit={handleSaveUser}>
+        <form className={css.profileInfo} action={handleSubmit}>
           <div className={css.usernameWrapper}>
             <label htmlFor="username">Username:</label>
-            <input id="username"
+            <input
+              id="username"
               type="text"
               className={css.input}
-              value={username}
-              onChange={handleChange}
+              value={userData?.username}
+              onChange={e => setUserData(userData ? { ...userData, username: e.target.value } : undefined)}
             />
           </div>
 
-          <p>Email: { user?.email}</p>
+          <p>Email: {userData?.email}</p>
 
           <div className={css.actions}>
             <button type="submit" className={css.saveButton}>
               Save
             </button>
-            <button type="button" className={css.cancelButton} onClick={handleBack}>
+            <button type="button" className={css.cancelButton} onClick={handleReturn}>
               Cancel
             </button>
           </div>
         </form>
       </div>
     </main>
-  )
-}
+  );
+};
 
-export default EditProfile
+export default EditProfile;

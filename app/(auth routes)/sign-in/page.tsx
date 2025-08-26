@@ -1,38 +1,36 @@
-"use client"
+'use client';
 
-import { useState } from "react";
-import css from "./SignInPage.module.css";
-import { login, SignInRequest } from "@/lib/api/clientApi";
-import { useRouter } from "next/navigation";
-import { ApiError } from "@/app/api/api";
-import { useAuthStore } from "@/lib/store/authStore";
-
+import { useState } from 'react';
+import css from './SignIn.module.css';
+import { useRouter } from 'next/navigation';
+import { LoginRequest } from '@/types/user';
+import { login } from '@/lib/api/clientApi';
+import { ApiError } from '@/lib/api/api';
+import { useAuthStore } from '@/lib/store/authStore';
 
 const SignIn = () => {
-  const router = useRouter()
-  const [error, setError] = useState("")
-  const setUser = useAuthStore((state)=>state.setUser)
+  const [error, setError] = useState('');
+  const router = useRouter();
+  const setUser = useAuthStore(state => state.setUser);
 
   const handleSubmit = async (formData: FormData) => {
     try {
-      const data = Object.fromEntries(formData) as unknown as SignInRequest
-
-      const response = await login(data)
-      if (response) {
-        setUser(response)
-        router.push("/profile")
+      const values = Object.fromEntries(formData) as LoginRequest;
+      const res = await login(values);
+      if (res) {
+        setUser(res);
+        router.push('/profile');
       } else {
-        setError("Invalid email or password")
+        setError('Invalid email or password');
       }
-
     } catch (error) {
       setError(
-        (error as ApiError).response?.data?.error ??
-          (error as ApiError).message ??
+        (error as ApiError)?.response?.data?.response?.validation?.body?.message ??
+          (error as ApiError)?.response?.data?.response?.message ??
           'Oops... some error'
-      )
+      );
     }
-  }
+  };
 
   return (
     <main className={css.mainContent}>
@@ -55,10 +53,10 @@ const SignIn = () => {
           </button>
         </div>
 
-        <p className={css.error}>{error}</p>
+        {error && <p className={css.error}>{error}</p>}
       </form>
     </main>
-  )
-}
+  );
+};
 
 export default SignIn;

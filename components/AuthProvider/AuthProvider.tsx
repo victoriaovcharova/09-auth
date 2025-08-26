@@ -1,31 +1,41 @@
-"use client"
+'use client';
 
-import { checkSession, getMe } from "@/lib/api/clientApi";
-import { useAuthStore } from "@/lib/store/authStore";
-import { useEffect } from "react";
+import { getMe, getSession } from '@/lib/api/clientApi';
+import { useAuthStore } from '@/lib/store/authStore';
+import { useEffect, useState } from 'react';
+import css from './AuthProvider.module.css';
 
-interface Props {
+interface AuthProviderProps {
   children: React.ReactNode;
 }
 
-const AuthProvider = ({ children }: Props) => {
-  const setUser = useAuthStore((state) => state.setUser);
-  const clearIsAuthenticated = useAuthStore((state) => state.clearIsAuthenticated)
-  
+const AuthProvider = ({ children }: AuthProviderProps) => {
+  const setUser = useAuthStore(state => state.setUser);
+  const clearIsAuthenticated = useAuthStore(state => state.clearIsAuthenticated);
+  const [loading, isLoading] = useState(false);
+
   useEffect(() => {
     const fetchUser = async () => {
-      const isAuthenticated = await checkSession();
+      isLoading(true);
+      const isAuthenticated = await getSession();
+
       if (isAuthenticated) {
         const user = await getMe();
-        if (user) setUser(user);
+        if (user) {
+          setUser(user);
+          isLoading(false);
+        }
       } else {
         clearIsAuthenticated();
+        isLoading(false);
       }
-    }
-    fetchUser()
-  }, [setUser, clearIsAuthenticated])
+    };
+    fetchUser();
+  }, [setUser, clearIsAuthenticated]);
+
+  if (loading) return <div className={css.loading}>Loading...</div>;
 
   return children;
-}
+};
 
 export default AuthProvider;
