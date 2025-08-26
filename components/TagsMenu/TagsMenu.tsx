@@ -1,38 +1,41 @@
+'use client';
 
-"use client"
-import Link from "next/link";
-import css from "./TagsMenu.module.css";
-import { useState } from "react";
+import { useState } from 'react';
+import Link from 'next/link';
+import css from './TagsMenu.module.css';
+import type { NoteTag } from '@/types/note';
 
-type Tag = "All" | "Work" | "Personal" | "Meeting" | "Shopping" | "Todo";
-const tags: Tag[] = ["All", "Work", "Personal", "Meeting", "Shopping", "Todo"];
-// type Props = {
-//    tags: Tag[]; 
-// };
-const TagsMenu = () => {
+const tags: NoteTag[] = ['All', 'Personal', 'Work', 'Todo', 'Meeting', 'Shopping'];
 
+export default function TagsMenu() {
   const [isOpen, setIsOpen] = useState(false);
-  const toggle = () => setIsOpen(!isOpen);
-
 
   return (
     <div className={css.menuContainer}>
-      <button onClick={toggle} className={css.menuButton}>Notes</button>
+      <button 
+        className={css.menuButton}
+        onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+      >
+        Notes ▾
+      </button>
+      
       {isOpen && (
-      <ul className={css.menuList}>
-        {tags.map((tag, index) => {
-          return (
-            <li key={index} className={css.menuItem}>
-              <Link href={`/notes/filter/${tag}`} className={css.menuLink} onClick={toggle}>
+        <ul className={css.menuList}>
+          {tags.map((tag) => (
+            <li key={tag} className={css.menuItem}>
+              <Link
+                href={tag === 'All' ? '/notes/filter/All' : `/notes/filter/${tag}`}
+                className={css.menuLink}
+                onClick={() => setIsOpen(false)}
+                prefetch={false}
+              >
                 {tag}
               </Link>
             </li>
-          );
-        })}
-      </ul>
+          ))}
+        </ul>
       )}
     </div>
   );
-};
-
-export default TagsMenu;
+}

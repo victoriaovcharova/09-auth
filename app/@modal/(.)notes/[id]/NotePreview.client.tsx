@@ -1,44 +1,57 @@
-"use client";
+'use client';
 
-import css from "./NotePreview.module.css";
-import { useParams, useRouter } from "next/navigation";
-import Modal from "@/components/Modal/Modal";
-import { useQuery } from "@tanstack/react-query";
-import { fetchNoteById } from "@/lib/api/clientApi";
+import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { fetchNoteById } from '@/lib/api';
+import Modal from '@/components/Modal/Modal';
+import css from './NotePreview.module.css';
 
-export default function NotePreviewClient() {
+export default function NotePreview({ id }: { id: string }) {
   const router = useRouter();
-
-  const { id } = useParams<{ id: string }>();
-
-  const {
-    data: note,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["note", id],
+  
+  const { data: note, isLoading, isError } = useQuery({
+    queryKey: ['note', id],
     queryFn: () => fetchNoteById(id),
-    refetchOnMount: false,
   });
 
-  if (isLoading) return <p>Loading, please wait...</p>;
+  const handleClose = () => {
+    router.back();
+  };
 
-  if (error || !note) return <p>Something went wrong.</p>;
-
-  const close = () => router.back();
+  if (isLoading) return <p>Loading...</p>;
+  if (isError || !note) return <p>Error loading note</p>;
 
   return (
-    <Modal close={close}>
+    <Modal onClose={handleClose}>
       <div className={css.container}>
-        <div className={css.item}>
-          <div className={css.header}>
-            <h2>{note.title}</h2>
-          </div>
-          <p className={css.tag}>{note.tag}</p>
-          <p className={css.content}>{note.content}</p>
-          <p className={css.date}>{note.createdAt}</p>
-        </div>
+        <h2 className={css.title}>{note.title}</h2>
+        <p className={css.content}>{note.content}</p>
+        <p className={css.tag}>Tag: {note.tag}</p>
+        <p className={css.date}>
+          Created: {new Date(note.createdAt).toLocaleDateString()}
+        </p>
       </div>
     </Modal>
   );
 }
+
+
+
+
+// import  Modal  from '@/components/Modal/Modal';
+// import NoteDetailsClient from '@/app/notes/[id]/NoteDetails.client';
+
+// export default async function ModalNotePage({
+//   params,
+// }: {
+//   params: Promise<{ id: string }>;
+// }) {
+//   const resolvedParams = await params;
+//   const { id } = resolvedParams;
+
+//   return (
+//     <Modal onClose={() => window.history.back()}>
+//       <NoteDetailsClient id={id} />
+//     </Modal>
+//   );
+// }

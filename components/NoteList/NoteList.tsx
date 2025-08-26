@@ -1,54 +1,57 @@
-import css from "./NoteList.module.css";
-import type { Note } from "../../types/note";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-import Link from "next/link";
-import { deleteNote } from "@/lib/api/clientApi";
-
+import { useCallback } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
+import { deleteNote } from '@/lib/api';
+import css from './NoteList.module.css';
+import type { Note } from '@/types/note';
 
 interface NoteListProps {
   notes: Note[];
+  onNoteDeleted: () => void;
 }
-export default function NoteList({ notes }: NoteListProps) {
+
+const NoteList = ({ notes, onNoteDeleted }: NoteListProps) => {
   const queryClient = useQueryClient();
 
-  const deleteNoteMutation = useMutation({
-    mutationFn: (id: string) => {
-      return deleteNote(id);
-    },
-
+  const deleteMutation = useMutation({
+    mutationFn: deleteNote,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      onNoteDeleted();
     },
   });
 
+  const handleDelete = useCallback((id: string): void => {
+    if (window.confirm('Are you sure you want to delete this note?')) {
+      deleteMutation.mutate(id);
+    }
+  }, [deleteMutation]);
+
   return (
-    <>
-      {notes.length === 0 && <span>Not found</span>}
-      {notes.length > 0 && (
-        <ul className={css.list}>
-          {notes.map((note) => {
-            return (
-              <li key={note.id} className={css.listItem}>
-                <h2 className={css.title}>{note.title}</h2>
-                <p className={css.content}>{note.content}</p>
-                <div className={css.footer}>
-                  <span className={css.tag}>{note.tag}</span>
-                  <Link className={css.link} href={`/notes/${note.id}`} scroll={false}>
-                    View details
-                  </Link>
-                  <button
-                    onClick={() => deleteNoteMutation.mutate(note.id)}
-                    className={css.button}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </>
+    <ul className={css.list}>
+      {notes.map((note: Note) => (
+        <li key={note.id} className={css.listItem}>
+          <h2 className={css.title}>{note.title}</h2>
+          <p className={css.content}>{note.content}</p>
+          <div className={css.footer}>
+            <span className={css.tag}>{note.tag}</span>
+            <div className={css.actions}>
+              <Link href={`/notes/${note.id}`} className={css.viewButton} scroll={false}>
+                View details
+              </Link>
+              <button
+                className={css.button}
+                onClick={() => handleDelete(note.id)}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
-}
+};
+
+export default NoteList;

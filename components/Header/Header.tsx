@@ -1,12 +1,11 @@
-import Link from "next/link";
-import css from "./Header.module.css";
-import TagsMenu from "../TagsMenu/TagsMenu";
-import AuthNavigation from "../AuthNavigation/AuthNavigation";
+import Link from 'next/link';
+import css from './Header.module.css';
+import TagsMenu from '../TagsMenu/TagsMenu';
 
 export default function Header() {
   return (
     <header className={css.header}>
-      <Link href="/" aria-label="Home">
+      <Link href="/" aria-label="Home" className={css.logo}>
         NoteHub
       </Link>
       <nav aria-label="Main Navigation">
@@ -17,7 +16,6 @@ export default function Header() {
           <li>
             <TagsMenu />
           </li>
-          <AuthNavigation />
         </ul>
       </nav>
     </header>
