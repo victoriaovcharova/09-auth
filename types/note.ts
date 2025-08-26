@@ -2,22 +2,51 @@ export interface Note {
   id: string;
   title: string;
   content: string;
-  categotyId: string,
   createdAt: string;
   updatedAt: string;
   tag: string;
 }
 
-
-export interface NewNoteData {
+export type NewNoteData = {
   title: string;
   content: string;
   tag: string;
 }
 
+export interface FetchNotesParams {
+    page?: number;
+    perPage?: number;
+    search?: string;
+    tag?: string;
+}
 
+export interface FetchNotesResponse {
+    page: number;
+    data: Note[];
+    total_pages: number;
+    perPage: number;
+}
 
-export type NoteListResponse = {
+export interface RawFetchNotesResponse {
   notes: Note[];
-  total: number;
-};
+  totalPages: number;
+}
+
+export type RegisterRequestData = {
+   email: string,
+  password: string
+}
+
+export type UpdateUserRequest = {
+  username: string;
+}
+
+export type LoginRequestData = {
+   email: string,
+  password: string
+}
+
+export type CheckSessionRequest = {
+  success: boolean;
+}
+
